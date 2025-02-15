@@ -1,9 +1,10 @@
 package by.bsuir.food_ordering_service.core.mapper;
 
-import by.bsuir.food_ordering_service.api.dto.food.PizzaDTO;
-import by.bsuir.food_ordering_service.core.objects.food.Pizza;
+import by.bsuir.food_ordering_service.api.dto.FoodDTO;
+import by.bsuir.food_ordering_service.core.objects.Food;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 
 @Mapper(config = BaseMapper.class)
-public interface PizzaMapper extends BaseMapper<Pizza, PizzaDTO> {
+public interface FoodMapper extends BaseMapper<Food, FoodDTO> {
 }

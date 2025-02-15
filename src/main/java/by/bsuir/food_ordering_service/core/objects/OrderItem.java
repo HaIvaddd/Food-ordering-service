@@ -1,22 +1,19 @@
 package by.bsuir.food_ordering_service.core.objects;
 
-import by.bsuir.food_ordering_service.core.objects.food.AFood;
 import lombok.*;
 
 import java.math.BigDecimal;
 
-@RequiredArgsConstructor @Getter
+@Setter
+@Getter
+@AllArgsConstructor
 public class OrderItem {
 
     private Long id;
 
-    @Setter @NonNull
     private Order order;
-    @Setter @NonNull
-    private AFood food;
-    @Setter @NonNull
+    private Food food;
     private Integer count;
 
-    @Setter
     private BigDecimal totalPrice;
 }

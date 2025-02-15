@@ -6,16 +6,14 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-
-@Getter @RequiredArgsConstructor
+@AllArgsConstructor
+@Getter
+@Setter
 public class Order {
-
     private Long id;
 
-    @NonNull @Setter
     private User user;
-    @NonNull @Setter
     private LocalDateTime createdAt;
     //Возможно добавить цену всего заказа
-    private List<OrderItem> orderItemList = new ArrayList<>();
+    private List<OrderItem> orderItems = new ArrayList<>();
 }

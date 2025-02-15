@@ -1,22 +1,20 @@
-package by.bsuir.food_ordering_service.core.objects.food;
+package by.bsuir.food_ordering_service.core.objects;
 
-import by.bsuir.food_ordering_service.core.objects.OrderItem;
 import lombok.*;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
 
 @Setter
 @Getter
-@RequiredArgsConstructor
-@NoArgsConstructor
-public abstract class AFood {
+@AllArgsConstructor
+public class Food {
 
-    protected Long id;
+    private Long id;
 
-    protected String name;
-    protected BigDecimal price;
+    private String name;
+    private BigDecimal price;
 
+    private FoodType foodType;
+    //добавить String description
     //List<OrderItem> orderItems = new ArrayList<>();
 }
