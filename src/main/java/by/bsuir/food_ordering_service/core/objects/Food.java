@@ -7,7 +7,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
-
+@Setter
 @Getter
 @RequiredArgsConstructor
 @NoArgsConstructor
@@ -15,10 +15,8 @@ public abstract class AFood {
 
     protected Long id;
 
-    @NonNull @Setter
     protected String name;
-    @NonNull @Setter
     protected BigDecimal price;
 
-    List<OrderItem> orderItems = new ArrayList<>();
+    //List<OrderItem> orderItems = new ArrayList<>();
 }
