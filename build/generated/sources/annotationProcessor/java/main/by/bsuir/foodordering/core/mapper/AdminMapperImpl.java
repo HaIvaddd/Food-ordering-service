@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2025-02-16T13:39:36+0300",
+    date = "2025-02-17T09:19:55+0300",
     comments = "version: 1.6.3, compiler: IncrementalProcessingEnvironment from gradle-language-java-8.12.1.jar, environment: Java 23.0.2 (Oracle Corporation)"
 )
 @Component
@@ -26,6 +26,7 @@ public class AdminMapperImpl implements AdminMapper {
         adminDto.setId( entity.getId() );
         adminDto.setName( entity.getName() );
         adminDto.setEmail( entity.getEmail() );
+        adminDto.setPassword( entity.getPassword() );
 
         return adminDto;
     }
@@ -37,6 +38,8 @@ public class AdminMapperImpl implements AdminMapper {
         }
 
         String password = null;
+
+        password = dto.getPassword();
 
         Admin admin = new Admin( password );
 
@@ -75,6 +78,9 @@ public class AdminMapperImpl implements AdminMapper {
         }
         if ( dto.getEmail() != null ) {
             entity.setEmail( dto.getEmail() );
+        }
+        if ( dto.getPassword() != null ) {
+            entity.setPassword( dto.getPassword() );
         }
 
         return entity;

@@ -1,7 +1,6 @@
 Manifest-Version: 1.0
 Main-Class: org.springframework.boot.loader.launch.JarLauncher
-Start-Class: by.bsuir.food_ordering_service.FoodOrderingServiceApplicati
- on
+Start-Class: by.bsuir.foodordering.FoodOrderingServiceApplication
 Spring-Boot-Version: 3.4.2
 Spring-Boot-Classes: BOOT-INF/classes/
 Spring-Boot-Lib: BOOT-INF/lib/
