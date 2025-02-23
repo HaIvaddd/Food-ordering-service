@@ -1,6 +1,7 @@
-package by.bsuir.foodordering.core.mapper;
+package by.bsuir.foodordering.core.mapper.get;
 
-import by.bsuir.foodordering.api.dto.OrderDto;
+import by.bsuir.foodordering.api.dto.get.OrderDto;
+import by.bsuir.foodordering.core.mapper.BaseMapper;
 import by.bsuir.foodordering.core.objects.Order;
 import by.bsuir.foodordering.core.objects.OrderItem;
 import java.util.List;
@@ -25,6 +26,6 @@ public interface OrderMapper extends BaseMapper<Order, OrderDto> {
                 .map(OrderItem::getId)
                 .toList();
     }
+
+
 }
-//gegege
-//ssdsd

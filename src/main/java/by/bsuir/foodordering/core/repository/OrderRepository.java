@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import lombok.Getter;
 import org.springframework.stereotype.Repository;
 
@@ -14,8 +15,8 @@ public class OrderRepository {
 
     private final Map<Long, Order> orders = new HashMap<>();
 
-    public Order findByOrderId(Long id) {
-        return orders.get(id);
+    public Optional<Order> findByOrderId(Long id) {
+        return Optional.of(orders.get(id));
     }
 
     public List<Order> findByUserId(Long userId) {
@@ -29,7 +30,15 @@ public class OrderRepository {
         return new ArrayList<>(orders.values());
     }
 
+    public void deleteById(Long id) {
+        orders.remove(id);
+    }
+
     public Order save(Order order) {
         return orders.put(order.getId(), order);
+    }
+
+    public boolean existsById(Long id) {
+        return orders.containsKey(id);
     }
 }

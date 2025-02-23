@@ -1,4 +1,4 @@
-package by.bsuir.foodordering.api.dto;
+package by.bsuir.foodordering.api.dto.get;
 
 import java.time.LocalDateTime;
 import java.util.List;

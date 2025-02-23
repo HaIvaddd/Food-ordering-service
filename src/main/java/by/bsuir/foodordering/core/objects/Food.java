@@ -1,5 +1,6 @@
 package by.bsuir.foodordering.core.objects;
 
+import by.bsuir.foodordering.core.exception.FoodTypeException;
 import java.math.BigDecimal;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -20,7 +21,10 @@ public class Food {
     private FoodType foodType;
 
     public boolean hasType(String type) {
-        return foodType.equals(FoodType.valueOf(type));
+        try {
+            return foodType.equals(FoodType.valueOf(type));
+        } catch (IllegalArgumentException e) {
+            throw new FoodTypeException("Unknown FoodType: " + type);
+        }
     }
-
 }

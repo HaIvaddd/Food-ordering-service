@@ -1,4 +1,4 @@
-package by.bsuir.foodordering.api.dto;
+package by.bsuir.foodordering.api.dto.get;
 
 import java.math.BigDecimal;
 import lombok.Getter;

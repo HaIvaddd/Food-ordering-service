@@ -5,10 +5,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import lombok.Getter;
 import org.springframework.stereotype.Repository;
-
-
 
 @Repository
 @Getter
@@ -20,8 +19,8 @@ public class FoodRepository {
         return new ArrayList<>(foods.values());
     }
 
-    public Food findById(Long id) {
-        return foods.get(id);
+    public Optional<Food> findById(Long id) {
+        return  Optional.ofNullable(foods.get(id));
     }
 
     public List<Food> findByType(String type) {
@@ -31,7 +30,15 @@ public class FoodRepository {
                 .toList();
     }
 
-    public void save(Food food) {
-        foods.put(food.getId(), food);
+    public Food saveFood(Food food) {
+        return foods.put(food.getId(), food);
+    }
+
+    public void deleteById(Long foodId) {
+        foods.remove(foodId);
+    }
+
+    public boolean existsById(Long foodId) {
+        return foods.containsKey(foodId);
     }
 }

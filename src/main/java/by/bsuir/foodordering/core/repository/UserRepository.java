@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import  java.util.Optional;
 import lombok.Getter;
 import org.springframework.stereotype.Repository;
 
@@ -18,8 +19,8 @@ public class UserRepository {
         return new ArrayList<>(users.values());
     }
 
-    public User findById(Long id) {
-        return users.get(id);
+    public Optional<User> findById(Long id) {
+        return Optional.of(users.get(id));
     }
 
     public List<User> findByName(String name) {
@@ -29,7 +30,19 @@ public class UserRepository {
                 .toList();
     }
 
+    public User create(User user) {
+        return users.put(user.getId(), user);
+    }
+
     public User save(User user) {
         return users.put(user.getId(), user);
+    }
+
+    public boolean existsById(Long id) {
+        return users.containsKey(id);
+    }
+
+    public void deleteById(Long id) {
+        users.remove(id);
     }
 }

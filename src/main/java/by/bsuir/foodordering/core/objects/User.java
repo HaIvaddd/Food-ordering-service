@@ -15,13 +15,20 @@ public class User {
     private String name;
     private String email;
 
+    private UserType userType;
+
     private final List<Order> orders = new ArrayList<>();
 
-    public User(Long id, String name, String email, List<Order> orders) {
+    public User(Long id, String name, String email, UserType userType, List<Order> orders) {
         this.id = id;
         this.name = name;
         this.email = email;
+        this.userType = userType;
         this.orders.addAll(orders);
+    }
+
+    public void addOrder(Order order) {
+        orders.add(order);
     }
 
 }

@@ -1,6 +1,7 @@
-package by.bsuir.foodordering.core.mapper;
+package by.bsuir.foodordering.core.mapper.get;
 
-import by.bsuir.foodordering.api.dto.FoodDto;
+import by.bsuir.foodordering.api.dto.get.FoodDto;
+import by.bsuir.foodordering.core.mapper.BaseMapper;
 import by.bsuir.foodordering.core.objects.Food;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

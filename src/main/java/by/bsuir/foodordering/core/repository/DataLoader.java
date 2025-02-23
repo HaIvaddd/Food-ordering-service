@@ -5,6 +5,7 @@ import by.bsuir.foodordering.core.objects.FoodType;
 import by.bsuir.foodordering.core.objects.Order;
 import by.bsuir.foodordering.core.objects.OrderItem;
 import by.bsuir.foodordering.core.objects.User;
+import by.bsuir.foodordering.core.objects.UserType;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -36,6 +37,7 @@ public class DataLoader implements CommandLineRunner {
                 1L,
                 "Maksim",
                 "halvaddd@gmail.com",
+                UserType.USER,
                 List.of(order));
         userRepository.save(user1);
 
@@ -43,6 +45,7 @@ public class DataLoader implements CommandLineRunner {
                 2L,
                 "Tanya",
                 "pupu@gmail.com",
+                UserType.USER,
                 List.of(order));
         userRepository.save(user2);
 
@@ -52,7 +55,7 @@ public class DataLoader implements CommandLineRunner {
                 new BigDecimal("6.99"),
                 FoodType.PIZZA);
         orderItem1.setFood(food1);
-        foodRepository.save(food1);
+        foodRepository.saveFood(food1);
 
         Food food2 = new Food(
                 2L,
@@ -60,7 +63,7 @@ public class DataLoader implements CommandLineRunner {
                 new BigDecimal("8.99"),
                 FoodType.PIZZA);
         orderItem2.setFood(food2);
-        foodRepository.save(food2);
+        foodRepository.saveFood(food2);
 
         Food food3 = new Food(
                 3L,
@@ -68,7 +71,7 @@ public class DataLoader implements CommandLineRunner {
                 new BigDecimal("8.99"),
                 FoodType.BURGER);
         orderItem3.setFood(food3);
-        foodRepository.save(food3);
+        foodRepository.saveFood(food3);
 
         Food food4 = new Food(
                 4L,
@@ -76,7 +79,7 @@ public class DataLoader implements CommandLineRunner {
                 new BigDecimal("4.49"),
                 FoodType.SALAD);
         orderItem4.setFood(food4);
-        foodRepository.save(food4);
+        foodRepository.saveFood(food4);
 
         order.setUser(user1);
         orderItem1.setOrder(order);
