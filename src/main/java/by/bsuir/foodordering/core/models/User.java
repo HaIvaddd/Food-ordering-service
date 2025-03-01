@@ -1,4 +1,4 @@
-package by.bsuir.foodordering.core.objects;
+package by.bsuir.foodordering.core.models;
 
 import java.util.ArrayList;
 import java.util.List;

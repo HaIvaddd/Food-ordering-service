@@ -1,11 +1,11 @@
 package by.bsuir.foodordering.core.repository;
 
-import by.bsuir.foodordering.core.objects.Food;
-import by.bsuir.foodordering.core.objects.FoodType;
-import by.bsuir.foodordering.core.objects.Order;
-import by.bsuir.foodordering.core.objects.OrderItem;
-import by.bsuir.foodordering.core.objects.User;
-import by.bsuir.foodordering.core.objects.UserType;
+import by.bsuir.foodordering.core.models.Food;
+import by.bsuir.foodordering.core.models.FoodType;
+import by.bsuir.foodordering.core.models.Order;
+import by.bsuir.foodordering.core.models.OrderItem;
+import by.bsuir.foodordering.core.models.User;
+import by.bsuir.foodordering.core.models.UserType;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;

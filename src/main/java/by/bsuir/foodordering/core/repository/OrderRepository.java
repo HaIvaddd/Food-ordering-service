@@ -1,6 +1,6 @@
 package by.bsuir.foodordering.core.repository;
 
-import by.bsuir.foodordering.core.objects.Order;
+import by.bsuir.foodordering.core.models.Order;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;

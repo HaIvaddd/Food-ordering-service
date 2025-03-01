@@ -1,7 +1,10 @@
-package by.bsuir.foodordering.core.objects;
+package by.bsuir.foodordering.core.models;
 
 import by.bsuir.foodordering.core.exception.FoodTypeException;
 import java.math.BigDecimal;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -11,6 +14,8 @@ import lombok.Setter;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
+@Entity
+@Table(name = "Foods")
 public class Food {
 
     private Long id;

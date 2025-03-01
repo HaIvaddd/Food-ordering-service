@@ -2,71 +2,19 @@ package by.bsuir.foodordering.core.service;
 
 import by.bsuir.foodordering.api.dto.create.CreateFoodDto;
 import by.bsuir.foodordering.api.dto.get.FoodDto;
-import by.bsuir.foodordering.core.exception.EntityNotFoundException;
-import by.bsuir.foodordering.core.mapper.create.CreateFoodMapper;
-import by.bsuir.foodordering.core.mapper.get.FoodMapper;
-import by.bsuir.foodordering.core.objects.Food;
-import by.bsuir.foodordering.core.repository.FoodRepository;
 import java.util.List;
-import lombok.AllArgsConstructor;
-import org.springframework.stereotype.Service;
 
-@Service
-@AllArgsConstructor
-public class FoodService implements BaseFoodService {
+public interface FoodService {
 
-    private final FoodMapper foodMapper;
-    private final CreateFoodMapper createFoodMapper;
-    private final FoodRepository foodRepository;
+    List<FoodDto> findAll();
 
-    @Override
-    public FoodDto findById(Long id) {
-        return foodMapper.toDto(
-                foodRepository
-                        .findById(id).orElseThrow(() -> new EntityNotFoundException(id.toString())
-                        )
-        );
-    }
+    List<FoodDto> findByType(String type);
 
-    @Override
-    public FoodDto create(CreateFoodDto foodDto) {
-        if (foodDto == null) {
-            throw new IllegalArgumentException();
-        }
-        return foodMapper.toDto(foodRepository.saveFood(createFoodMapper.toEntity(foodDto)));
-    }
+    FoodDto findById(Long id);
 
-    @Override
-    public FoodDto update(FoodDto foodDto) {
-        if (foodDto == null) {
-            throw new IllegalArgumentException();
-        }
-        Food existingFood = foodRepository.findById(foodDto.getId())
-                .orElseThrow(
-                        () -> new EntityNotFoundException(
-                                "Food not found with id: " + foodDto.getId()
-                        )
-                );
-        Food mergedFood = foodMapper.merge(existingFood, foodDto);
-        return foodMapper.toDto(mergedFood);
-    }
+    FoodDto create(CreateFoodDto foodDto);
 
-    @Override
-    public void delete(Long foodId) {
-        if (!foodRepository.existsById(foodId)) {
-            throw new EntityNotFoundException(foodId.toString());
-        }
-        foodRepository.deleteById(foodId);
-    }
+    FoodDto update(FoodDto foodDto);
 
-    @Override
-    public List<FoodDto> findAll() {
-        return foodMapper.toDtos(foodRepository.findAll());
-    }
-
-    @Override
-    public List<FoodDto> findByType(String type) {
-        return foodMapper.toDtos(foodRepository.findByType(type));
-    }
-
+    void delete(Long foodId);
 }

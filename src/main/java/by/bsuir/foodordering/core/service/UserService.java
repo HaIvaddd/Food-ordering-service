@@ -2,68 +2,19 @@ package by.bsuir.foodordering.core.service;
 
 import by.bsuir.foodordering.api.dto.create.CreateUserDto;
 import by.bsuir.foodordering.api.dto.get.UserDto;
-import by.bsuir.foodordering.core.exception.EntityNotFoundException;
-import by.bsuir.foodordering.core.mapper.create.CreateUserMapper;
-import by.bsuir.foodordering.core.mapper.get.UserMapper;
-import by.bsuir.foodordering.core.objects.User;
-import by.bsuir.foodordering.core.repository.UserRepository;
 import java.util.List;
-import lombok.AllArgsConstructor;
-import org.springframework.stereotype.Service;
 
+public interface UserService {
 
-@Service
-@AllArgsConstructor
-public class UserService implements BaseUserService {
+    UserDto findById(Long id);
 
-    private static final String USER_EX = "User not found with id: ";
+    UserDto create(CreateUserDto createUserDto);
 
-    private final UserRepository userRepository;
-    private final UserMapper userMapper;
-    private final CreateUserMapper createUserMapper;
+    UserDto update(UserDto userDto);
 
-    @Override
-    public UserDto findById(Long id) {
-        return userMapper
-                .toDto(userRepository
-                        .findById(id)
-                        .orElseThrow(
-                                () -> new EntityNotFoundException(USER_EX + id
-                                )
-                        )
-                );
-    }
+    List<UserDto> findByUsername(String username);
 
-    @Override
-    public UserDto create(CreateUserDto createUserDto) {
-        return userMapper.toDto(userRepository.save(createUserMapper.toEntity(createUserDto)));
-    }
+    List<UserDto> findAll();
 
-    @Override
-    public UserDto update(UserDto userDto) {
-        User user = userRepository
-                .findById(userDto.getId())
-                .orElseThrow(() -> new EntityNotFoundException(
-                        USER_EX + userDto.getId()));
-        return userMapper.toDto(userMapper.merge(user, userDto));
-    }
-
-    @Override
-    public void deleteById(Long id) {
-        if (userRepository.existsById(id)) {
-            userRepository.deleteById(id);
-        } else {
-            throw new EntityNotFoundException(USER_EX + id);
-        }
-    }
-
-    @Override
-    public List<UserDto> findByUsername(String username) {
-        return userMapper.toDtos(userRepository.findByName(username));
-    }
-
-    @Override
-    public List<UserDto> findAll() {
-        return userMapper.toDtos(userRepository.findAll());
-    }
+    void deleteById(Long id);
 }

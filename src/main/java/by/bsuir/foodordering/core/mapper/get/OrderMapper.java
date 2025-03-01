@@ -2,8 +2,8 @@ package by.bsuir.foodordering.core.mapper.get;
 
 import by.bsuir.foodordering.api.dto.get.OrderDto;
 import by.bsuir.foodordering.core.mapper.BaseMapper;
-import by.bsuir.foodordering.core.objects.Order;
-import by.bsuir.foodordering.core.objects.OrderItem;
+import by.bsuir.foodordering.core.models.Order;
+import by.bsuir.foodordering.core.models.OrderItem;
 import java.util.List;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

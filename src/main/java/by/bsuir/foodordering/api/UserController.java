@@ -2,7 +2,7 @@ package by.bsuir.foodordering.api;
 
 import by.bsuir.foodordering.api.dto.create.CreateUserDto;
 import by.bsuir.foodordering.api.dto.get.UserDto;
-import by.bsuir.foodordering.core.service.UserService;
+import by.bsuir.foodordering.core.service.impl.UserService;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.DeleteMapping;
