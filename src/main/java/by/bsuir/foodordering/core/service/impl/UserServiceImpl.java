@@ -7,15 +7,16 @@ import by.bsuir.foodordering.core.mapper.create.CreateUserMapper;
 import by.bsuir.foodordering.core.mapper.get.UserMapper;
 import by.bsuir.foodordering.core.models.User;
 import by.bsuir.foodordering.core.repository.UserRepository;
+import by.bsuir.foodordering.core.service.UserService;
+import jakarta.transaction.Transactional;
 import java.util.List;
-
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 
 @Service
 @AllArgsConstructor
-public class UserService implements by.bsuir.foodordering.core.service.UserService {
+public class UserServiceImpl implements UserService {
 
     private static final String USER_EX = "User not found with id: ";
 
@@ -41,6 +42,7 @@ public class UserService implements by.bsuir.foodordering.core.service.UserServi
     }
 
     @Override
+    @Transactional
     public UserDto update(UserDto userDto) {
         User user = userRepository
                 .findById(userDto.getId())

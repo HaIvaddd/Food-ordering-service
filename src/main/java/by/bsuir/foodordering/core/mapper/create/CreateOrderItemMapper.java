@@ -16,11 +16,7 @@ public interface CreateOrderItemMapper extends BaseMapper<OrderItem, CreateOrder
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "order", ignore = true)
-    @Mapping(target = "totalPrice",
-            expression = "java("
-                    + "BigDecimal"
-                    + ".valueOf(createOrderItemDto.getCount())"
-                    + ".multiply(food.getPrice()))")
+    @Mapping(target = "totalPrice", ignore = true)
     @Mapping(target = "food", source = "foodId", qualifiedByName = "toFoodFromFoodIdMap")
     OrderItem toEntity(CreateOrderItemDto createOrderItemDto,
                        @Context FoodRepository foodRepository);

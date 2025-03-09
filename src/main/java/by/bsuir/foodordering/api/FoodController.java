@@ -2,7 +2,7 @@ package by.bsuir.foodordering.api;
 
 import by.bsuir.foodordering.api.dto.create.CreateFoodDto;
 import by.bsuir.foodordering.api.dto.get.FoodDto;
-import by.bsuir.foodordering.core.service.impl.FoodService;
+import by.bsuir.foodordering.core.service.impl.FoodServiceImpl;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -20,30 +20,30 @@ import org.springframework.web.bind.annotation.RestController;
 @AllArgsConstructor
 public class FoodController {
 
-    private final FoodService foodService;
+    private final FoodServiceImpl foodServiceImpl;
 
-    @GetMapping(params = "foodType")
-    public List<FoodDto> findFoodByType(@RequestParam("foodType") String foodType) {
-        return foodService.findByType(foodType);
+    @GetMapping(params = "type")
+    public List<FoodDto> findFoodByType(@RequestParam("type") String foodType) {
+        return foodServiceImpl.findByType(foodType);
     }
 
     @PostMapping("/create")
     public FoodDto createFood(@RequestBody CreateFoodDto createFoodDto) {
-        return foodService.create(createFoodDto);
+        return foodServiceImpl.create(createFoodDto);
     }
 
     @DeleteMapping("/del/{id}")
     public void deleteFood(@PathVariable("id") Long id) {
-        foodService.delete(id);
+        foodServiceImpl.delete(id);
     }
 
     @PutMapping("/update")
     public FoodDto updateFood(@RequestBody FoodDto foodDto) {
-        return foodService.update(foodDto);
+        return foodServiceImpl.update(foodDto);
     }
 
     @GetMapping
     public List<FoodDto> findFoodAll() {
-        return foodService.findAll();
+        return foodServiceImpl.findAll();
     }
 }

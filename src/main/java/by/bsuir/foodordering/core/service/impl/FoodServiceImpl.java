@@ -6,15 +6,17 @@ import by.bsuir.foodordering.core.exception.EntityNotFoundException;
 import by.bsuir.foodordering.core.mapper.create.CreateFoodMapper;
 import by.bsuir.foodordering.core.mapper.get.FoodMapper;
 import by.bsuir.foodordering.core.models.Food;
+import by.bsuir.foodordering.core.models.FoodType;
 import by.bsuir.foodordering.core.repository.FoodRepository;
+import by.bsuir.foodordering.core.service.FoodService;
+import jakarta.transaction.Transactional;
 import java.util.List;
-
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
 @AllArgsConstructor
-public class FoodService implements by.bsuir.foodordering.core.service.FoodService {
+public class FoodServiceImpl implements FoodService {
 
     private final FoodMapper foodMapper;
     private final CreateFoodMapper createFoodMapper;
@@ -34,10 +36,12 @@ public class FoodService implements by.bsuir.foodordering.core.service.FoodServi
         if (foodDto == null) {
             throw new IllegalArgumentException();
         }
-        return foodMapper.toDto(foodRepository.saveFood(createFoodMapper.toEntity(foodDto)));
+        Food food = createFoodMapper.toEntity(foodDto);
+        return foodMapper.toDto(foodRepository.save(food));
     }
 
     @Override
+    @Transactional
     public FoodDto update(FoodDto foodDto) {
         if (foodDto == null) {
             throw new IllegalArgumentException();
@@ -67,7 +71,8 @@ public class FoodService implements by.bsuir.foodordering.core.service.FoodServi
 
     @Override
     public List<FoodDto> findByType(String type) {
-        return foodMapper.toDtos(foodRepository.findByType(type));
+        FoodType foodType = FoodType.valueOf(type.toUpperCase());
+        return foodMapper.toDtos(foodRepository.findByFoodType(foodType));
     }
 
 }

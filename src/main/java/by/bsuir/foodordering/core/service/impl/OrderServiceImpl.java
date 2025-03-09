@@ -7,22 +7,26 @@ import by.bsuir.foodordering.core.mapper.create.CreateOrderItemMapper;
 import by.bsuir.foodordering.core.mapper.get.OrderMapper;
 import by.bsuir.foodordering.core.models.Order;
 import by.bsuir.foodordering.core.models.OrderItem;
+import by.bsuir.foodordering.core.repository.FoodRepository;
 import by.bsuir.foodordering.core.repository.OrderItemRepository;
 import by.bsuir.foodordering.core.repository.OrderRepository;
 import by.bsuir.foodordering.core.repository.UserRepository;
+import by.bsuir.foodordering.core.service.OrderService;
+import jakarta.transaction.Transactional;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
-
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
 @AllArgsConstructor
-public class OrderService implements by.bsuir.foodordering.core.service.OrderService {
+public class OrderServiceImpl implements OrderService {
 
     private static final String ORDER_EX = "Order not found with id: ";
 
     private final OrderMapper orderMapper;
+    private final FoodRepository foodRepository;
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
     private final CreateOrderItemMapper createOrderItemMapper;
@@ -33,7 +37,7 @@ public class OrderService implements by.bsuir.foodordering.core.service.OrderSer
                 .stream()
                 .map(
                         id -> orderItemRepository
-                                .getOrderItemById(id)
+                                .findOrderItemById(id)
                                 .orElseThrow(
                                         () -> new EntityNotFoundException(
                                                 "OrderItem not found with id: " + id
@@ -44,11 +48,12 @@ public class OrderService implements by.bsuir.foodordering.core.service.OrderSer
     }
 
     @Override
+    @Transactional
     public OrderDto update(OrderDto orderDto) {
         if (orderDto == null) {
             throw new IllegalArgumentException();
         }
-        Order order = orderRepository.findByOrderId(orderDto.getId())
+        Order order = orderRepository.findById(orderDto.getId())
                 .orElseThrow(
                         () -> new EntityNotFoundException(
                                 ORDER_EX + orderDto.getId()
@@ -67,7 +72,6 @@ public class OrderService implements by.bsuir.foodordering.core.service.OrderSer
         if (!orderDto.getOrderItemIds().isEmpty()) {
             order.setOrderItems(toOrderItemMap(orderDto.getOrderItemIds()));
         }
-        //для бд нужно будет вызвать метод save
         return orderMapper.toDto(order);
     }
 
@@ -82,8 +86,13 @@ public class OrderService implements by.bsuir.foodordering.core.service.OrderSer
         );
         newOrder.setCreatedAt(LocalDateTime.now());
         newOrder.setOrderItems(createOrderDto.getCreateOrderItems()
-                .stream().map(createOrderItemMapper::toEntity).toList());
+                .stream().map(dto -> createOrderItemMapper.toEntity(dto, foodRepository))
+                        .toList());
         newOrder.getOrderItems().forEach(orderItem -> orderItem.setOrder(newOrder));
+        newOrder.getOrderItems().forEach(orderItem -> orderItem
+                .setTotalPrice(BigDecimal
+                        .valueOf(orderItem.getCount())
+                        .multiply(orderItem.getFood().getPrice())));
         return orderMapper.toDto(orderRepository.save(newOrder));
     }
 
@@ -109,7 +118,7 @@ public class OrderService implements by.bsuir.foodordering.core.service.OrderSer
     @Override
     public OrderDto findById(Long id) {
         return orderMapper.toDto(orderRepository
-                .findByOrderId(id)
+                .findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(ORDER_EX + id)));
     }
 }
