@@ -1,4 +1,4 @@
-
+-- NOSONAR: VARCHAR is correct for PostgreSQL
 CREATE TABLE food (
     id BIGSERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,

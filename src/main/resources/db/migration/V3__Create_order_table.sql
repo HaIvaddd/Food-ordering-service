@@ -1,3 +1,4 @@
+-- NOSONAR: VARCHAR is correct for PostgreSQL
 CREATE TABLE orders (
     id BIGSERIAL PRIMARY KEY,
     user_id BIGINT NOT NULL,
