@@ -2,6 +2,7 @@ package by.bsuir.foodordering.api;
 
 import by.bsuir.foodordering.api.dto.create.CreateOrderDto;
 import by.bsuir.foodordering.api.dto.get.OrderDto;
+import by.bsuir.foodordering.api.dto.get.OrderInfoDto;
 import by.bsuir.foodordering.core.service.impl.OrderServiceImpl;
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -22,7 +23,7 @@ public class OrderController {
     private final OrderServiceImpl orderServiceImpl;
 
     @GetMapping
-    public List<OrderDto> findAll() {
+    public List<OrderInfoDto> findAll() {
         return orderServiceImpl.findAll();
     }
 

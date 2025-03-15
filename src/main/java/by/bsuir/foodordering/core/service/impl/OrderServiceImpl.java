@@ -2,8 +2,11 @@ package by.bsuir.foodordering.core.service.impl;
 
 import by.bsuir.foodordering.api.dto.create.CreateOrderDto;
 import by.bsuir.foodordering.api.dto.get.OrderDto;
+import by.bsuir.foodordering.api.dto.get.OrderInfoDto;
 import by.bsuir.foodordering.core.exception.EntityNotFoundException;
 import by.bsuir.foodordering.core.mapper.create.CreateOrderItemMapper;
+import by.bsuir.foodordering.core.mapper.get.OrderInfoMapper;
+import by.bsuir.foodordering.core.mapper.get.OrderItemMapper;
 import by.bsuir.foodordering.core.mapper.get.OrderMapper;
 import by.bsuir.foodordering.core.models.Order;
 import by.bsuir.foodordering.core.models.OrderItem;
@@ -25,10 +28,12 @@ public class OrderServiceImpl implements OrderService {
 
     private static final String ORDER_EX = "Order not found with id: ";
 
+    private final OrderInfoMapper orderInfoMapper;
     private final OrderMapper orderMapper;
     private final FoodRepository foodRepository;
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
+    private final OrderItemMapper orderItemMapper;
     private final CreateOrderItemMapper createOrderItemMapper;
     private final UserRepository userRepository;
 
@@ -111,8 +116,11 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public List<OrderDto> findAll() {
-        return orderMapper.toDtos(orderRepository.findAll());
+    public List<OrderInfoDto> findAll() {
+        return orderRepository
+                .findAll()
+                .stream()
+                .map(order -> orderInfoMapper.toDto(order, orderItemMapper)).toList();
     }
 
     @Override

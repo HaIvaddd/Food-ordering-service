@@ -7,9 +7,9 @@ import lombok.Setter;
 
 @Setter
 @Getter
-public class OrderDto {
+public class OrderInfoDto {
     private Long id;
-    private Long userId;
+    private UserDto userDto;
     private LocalDateTime createdAt;
-    private List<Long> orderItemIds;
+    private List<OrderItemDto> orderItemDtos;
 }

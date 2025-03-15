@@ -66,13 +66,12 @@ public class FoodServiceImpl implements FoodService {
 
     @Override
     public List<FoodDto> findAll() {
-        return foodMapper.toDtos(foodRepository.findAll());
+        return foodRepository.findAll().stream().map(foodMapper::toDto).toList();
     }
 
     @Override
     public List<FoodDto> findByType(String type) {
         FoodType foodType = FoodType.valueOf(type.toUpperCase());
-        return foodMapper.toDtos(foodRepository.findByFoodType(foodType));
+        return foodRepository.findByFoodType(foodType).stream().map(foodMapper::toDto).toList();
     }
-
 }
