@@ -3,6 +3,7 @@ package by.bsuir.foodordering.core.repository;
 import by.bsuir.foodordering.core.models.Order;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Repository;
@@ -14,4 +15,8 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     Optional<Order> findById(@NonNull Long id);
 
     List<Order> findByUserId(Long userId);
+
+    @NonNull
+    @EntityGraph(attributePaths = {"user", "orderItems", "orderItems.food"})
+    List<Order> findAll();
 }
