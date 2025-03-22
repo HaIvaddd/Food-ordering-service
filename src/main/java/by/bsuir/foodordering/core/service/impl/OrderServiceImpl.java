@@ -55,6 +55,25 @@ public class OrderServiceImpl implements OrderService {
                 .toList();
     }
 
+    private void updateOrdersList(List<Order> orders) {
+        BigDecimal totalPrice;
+        for (Order order : orders) {
+
+            totalPrice = BigDecimal.ZERO;
+
+            if (order.getOrderItems().isEmpty()) {
+                orders.remove(order);
+                orderRepository.delete(order);
+                continue;
+            }
+
+            for (OrderItem orderItem : order.getOrderItems()) {
+                totalPrice = totalPrice.add(orderItem.getTotalPrice());
+            }
+            order.setTotalPrice(totalPrice);
+        }
+    }
+
     @Override
     @Transactional
     public OrderDto update(OrderDto orderDto) {
@@ -138,22 +157,7 @@ public class OrderServiceImpl implements OrderService {
     @Transactional
     public List<OrderDto> findByUserId(Long userId) {
         List<Order> orders = orderRepository.findByUserId(userId);
-        BigDecimal totalPrice;
-        for (Order order : orders) {
-
-            totalPrice = BigDecimal.ZERO;
-
-            if (order.getOrderItems().isEmpty()) {
-                orders.remove(order);
-                orderRepository.delete(order);
-                continue;
-            }
-
-            for (OrderItem orderItem : order.getOrderItems()) {
-                totalPrice = totalPrice.add(orderItem.getTotalPrice());
-            }
-            order.setTotalPrice(totalPrice);
-        }
+        updateOrdersList(orders);
         return orderMapper.toDtos(orders);
     }
 
@@ -169,22 +173,7 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public List<OrderInfoDto> findAll() {
         List<Order> orders = orderRepository.findAll();
-        BigDecimal totalPrice;
-        for (Order order : orders) {
-
-            totalPrice = BigDecimal.ZERO;
-
-            if (order.getOrderItems().isEmpty()) {
-                orders.remove(order);
-                orderRepository.delete(order);
-                continue;
-            }
-
-            for (OrderItem orderItem : order.getOrderItems()) {
-                totalPrice = totalPrice.add(orderItem.getTotalPrice());
-            }
-            order.setTotalPrice(totalPrice);
-        }
+        updateOrdersList(orders);
         return orders
                 .stream()
                 .map(order -> orderInfoMapper.toDto(order, orderItemMapper)).toList();
