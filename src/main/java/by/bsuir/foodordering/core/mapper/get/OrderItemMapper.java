@@ -8,6 +8,6 @@ import org.mapstruct.Mapping;
 
 @Mapper(config = BaseMapper.class, uses = {FoodMapper.class})
 public interface OrderItemMapper extends BaseMapper<OrderItem, OrderItemDto> {
-    @Mapping(target = "foodDto", source = "food", qualifiedByName = "toFoodDto")
+    @Mapping(target = "foodName", source = "food.name")
     OrderItemDto toDto(OrderItem order);
 }

@@ -8,6 +8,7 @@ import java.util.List;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -30,6 +31,11 @@ public class OrderController {
     @GetMapping({"/{id}"})
     public OrderDto findById(@PathVariable Long id) {
         return orderServiceImpl.findById(id);
+    }
+
+    @PatchMapping("/make/{id}")
+    public OrderDto makeOrder(@PathVariable("id") Long id) {
+        return orderServiceImpl.makeOrderById(id);
     }
 
     @PostMapping("/create")

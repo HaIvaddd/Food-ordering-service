@@ -7,7 +7,7 @@ import lombok.Setter;
 @Getter
 @Setter
 public class OrderItemDto {
-    private FoodDto foodDto;
+    private String foodName;
     private Integer count;
     private BigDecimal totalPrice;
 }

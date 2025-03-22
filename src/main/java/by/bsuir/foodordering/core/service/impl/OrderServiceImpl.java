@@ -3,7 +3,9 @@ package by.bsuir.foodordering.core.service.impl;
 import by.bsuir.foodordering.api.dto.create.CreateOrderDto;
 import by.bsuir.foodordering.api.dto.get.OrderDto;
 import by.bsuir.foodordering.api.dto.get.OrderInfoDto;
+import by.bsuir.foodordering.core.exception.CreatedEntityException;
 import by.bsuir.foodordering.core.exception.EntityNotFoundException;
+import by.bsuir.foodordering.core.exception.MakeOrderException;
 import by.bsuir.foodordering.core.mapper.create.CreateOrderItemMapper;
 import by.bsuir.foodordering.core.mapper.get.OrderInfoMapper;
 import by.bsuir.foodordering.core.mapper.get.OrderItemMapper;
@@ -36,6 +38,7 @@ public class OrderServiceImpl implements OrderService {
     private final OrderItemMapper orderItemMapper;
     private final CreateOrderItemMapper createOrderItemMapper;
     private final UserRepository userRepository;
+    private final OrderHistoryServiceImpl orderHistoryService;
 
     private List<OrderItem> toOrderItemMap(List<Long> orderItemIds) {
         return orderItemIds
@@ -57,6 +60,8 @@ public class OrderServiceImpl implements OrderService {
     public OrderDto update(OrderDto orderDto) {
         if (orderDto == null) {
             throw new IllegalArgumentException();
+        } else if (orderDto.isOrdered()) {
+            throw new MakeOrderException("The order has already been placed");
         }
         Order order = orderRepository.findById(orderDto.getId())
                 .orElseThrow(
@@ -77,11 +82,32 @@ public class OrderServiceImpl implements OrderService {
         if (!orderDto.getOrderItemIds().isEmpty()) {
             order.setOrderItems(toOrderItemMap(orderDto.getOrderItemIds()));
         }
+        BigDecimal totalPrice = BigDecimal.ZERO;
+
+        for (OrderItem orderItem : order.getOrderItems()) {
+            totalPrice = totalPrice.add(orderItem.getTotalPrice());
+        }
+        order.setTotalPrice(totalPrice);
+
+        return orderMapper.toDto(order);
+    }
+
+    @Transactional
+    @Override
+    public OrderDto makeOrderById(Long id) {
+        Order order = orderRepository
+                .findById(id)
+                .orElseThrow(() -> new EntityNotFoundException(ORDER_EX + id));
+        order.setOrdered(true);
+        orderHistoryService.addOrderToHistory(order);
         return orderMapper.toDto(order);
     }
 
     @Override
     public OrderDto create(CreateOrderDto createOrderDto) {
+        if (createOrderDto == null || createOrderDto.getCreateOrderItems().isEmpty()) {
+            throw new CreatedEntityException("Create order items cannot be empty");
+        }
         Order newOrder = new Order();
         newOrder.setUser(userRepository.findById(createOrderDto.getUserId())
                 .orElseThrow(
@@ -98,12 +124,36 @@ public class OrderServiceImpl implements OrderService {
                 .setTotalPrice(BigDecimal
                         .valueOf(orderItem.getCount())
                         .multiply(orderItem.getFood().getPrice())));
+
+        BigDecimal totalPrice = BigDecimal.ZERO;
+
+        for (OrderItem orderItem : newOrder.getOrderItems()) {
+            totalPrice = totalPrice.add(orderItem.getTotalPrice());
+        }
+        newOrder.setTotalPrice(totalPrice);
         return orderMapper.toDto(orderRepository.save(newOrder));
     }
 
     @Override
+    @Transactional
     public List<OrderDto> findByUserId(Long userId) {
-        return orderMapper.toDtos(orderRepository.findByUserId(userId));
+        List<Order> orders = orderRepository.findByUserId(userId);
+        BigDecimal totalPrice;
+        for (Order order : orders) {
+
+            totalPrice = BigDecimal.ZERO;
+
+            if (order.getOrderItems().isEmpty()) {
+                orders.remove(order);
+                orderRepository.delete(order);
+            }
+
+            for (OrderItem orderItem : order.getOrderItems()) {
+                totalPrice = totalPrice.add(orderItem.getTotalPrice());
+            }
+            order.setTotalPrice(totalPrice);
+        }
+        return orderMapper.toDtos(orders);
     }
 
     @Override
@@ -117,16 +167,43 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public List<OrderInfoDto> findAll() {
-        return orderRepository
-                .findAll()
+        List<Order> orders = orderRepository.findAll();
+        BigDecimal totalPrice;
+        for (Order order : orders) {
+
+            totalPrice = BigDecimal.ZERO;
+
+            if (order.getOrderItems().isEmpty()) {
+                orders.remove(order);
+                orderRepository.delete(order);
+            }
+
+            for (OrderItem orderItem : order.getOrderItems()) {
+                totalPrice = totalPrice.add(orderItem.getTotalPrice());
+            }
+            order.setTotalPrice(totalPrice);
+        }
+        return orders
                 .stream()
                 .map(order -> orderInfoMapper.toDto(order, orderItemMapper)).toList();
     }
 
     @Override
     public OrderDto findById(Long id) {
-        return orderMapper.toDto(orderRepository
+        Order order = orderRepository
                 .findById(id)
-                .orElseThrow(() -> new EntityNotFoundException(ORDER_EX + id)));
+                .orElseThrow(() -> new EntityNotFoundException(ORDER_EX + id));
+        if (order.getOrderItems().isEmpty()) {
+            orderRepository.delete(order);
+            throw new EntityNotFoundException(ORDER_EX + id);
+        }
+        BigDecimal totalPrice = BigDecimal.ZERO;
+
+        for (OrderItem orderItem : order.getOrderItems()) {
+            totalPrice = totalPrice.add(orderItem.getTotalPrice());
+        }
+
+        order.setTotalPrice(totalPrice);
+        return orderMapper.toDto(order);
     }
 }

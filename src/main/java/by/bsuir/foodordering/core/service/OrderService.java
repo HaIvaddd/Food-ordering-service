@@ -17,5 +17,7 @@ public interface OrderService {
 
     OrderDto create(CreateOrderDto createOrderDto);
 
+    OrderDto makeOrderById(Long id);
+
     void deleteById(Long id);
 }
