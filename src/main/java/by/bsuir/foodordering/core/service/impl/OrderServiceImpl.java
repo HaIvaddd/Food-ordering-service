@@ -176,6 +176,7 @@ public class OrderServiceImpl implements OrderService {
             if (order.getOrderItems().isEmpty()) {
                 orders.remove(order);
                 orderRepository.delete(order);
+                continue;
             }
 
             for (OrderItem orderItem : order.getOrderItems()) {
