@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -51,5 +52,15 @@ public class OrderController {
     @PutMapping("/update")
     public OrderDto updateOrder(@RequestBody OrderDto orderDto) {
         return orderServiceImpl.update(orderDto);
+    }
+
+    @GetMapping(params = "count_food")
+    public List<OrderInfoDto> findOrdersByCountFood(@RequestParam("count_food") int count) {
+        return orderServiceImpl.findByCountFood(count);
+    }
+
+    @GetMapping(params = "food_name")
+    public List<OrderInfoDto> findByFoodName(@RequestParam("food_name") String foodName) {
+        return orderServiceImpl.findByFoodName(foodName);
     }
 }

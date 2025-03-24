@@ -2,6 +2,7 @@ package by.bsuir.foodordering.core.service.impl;
 
 import by.bsuir.foodordering.api.dto.create.CreateFoodDto;
 import by.bsuir.foodordering.api.dto.get.FoodDto;
+import by.bsuir.foodordering.core.cache.Cache;
 import by.bsuir.foodordering.core.exception.EntityNotFoundException;
 import by.bsuir.foodordering.core.mapper.create.CreateFoodMapper;
 import by.bsuir.foodordering.core.mapper.get.FoodMapper;
@@ -21,14 +22,20 @@ public class FoodServiceImpl implements FoodService {
     private final FoodMapper foodMapper;
     private final CreateFoodMapper createFoodMapper;
     private final FoodRepository foodRepository;
+    private final Cache foodCache;
 
     @Override
     public FoodDto findById(Long id) {
-        return foodMapper.toDto(
-                foodRepository
-                        .findById(id).orElseThrow(() -> new EntityNotFoundException(id.toString())
-                        )
-        );
+        if (foodCache.get(id) != null) {
+            return foodMapper.toDto(foodCache.get(id));
+        } else {
+            return foodMapper.toDto(
+                    foodRepository
+                            .findById(id)
+                            .orElseThrow(() -> new EntityNotFoundException(id.toString())
+                            )
+            );
+        }
     }
 
     @Override
@@ -37,7 +44,7 @@ public class FoodServiceImpl implements FoodService {
             throw new IllegalArgumentException();
         }
         Food food = createFoodMapper.toEntity(foodDto);
-        return foodMapper.toDto(foodRepository.save(food));
+        return foodMapper.toDto(foodRepository.save(foodCache.put(food)));
     }
 
     @Override
@@ -46,13 +53,22 @@ public class FoodServiceImpl implements FoodService {
         if (foodDto == null) {
             throw new IllegalArgumentException();
         }
-        Food existingFood = foodRepository.findById(foodDto.getId())
-                .orElseThrow(
-                        () -> new EntityNotFoundException(
-                                "Food not found with id: " + foodDto.getId()
-                        )
-                );
+
+        Food existingFood = foodCache.get(foodDto.getId());
+
+        if  (existingFood == null) {
+            existingFood = foodRepository.findById(foodDto.getId())
+                    .orElseThrow(
+                            () -> new EntityNotFoundException(
+                                    "Food not found with id: " + foodDto.getId()
+                            )
+                    );
+        }
+
         Food mergedFood = foodMapper.merge(existingFood, foodDto);
+
+        foodCache.put(mergedFood);
+
         return foodMapper.toDto(mergedFood);
     }
 
@@ -61,6 +77,7 @@ public class FoodServiceImpl implements FoodService {
         if (!foodRepository.existsById(foodId)) {
             throw new EntityNotFoundException(foodId.toString());
         }
+        foodCache.deleteFood(foodId);
         foodRepository.deleteById(foodId);
     }
 

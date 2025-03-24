@@ -1,8 +1,10 @@
 package by.bsuir.foodordering.core.service.impl;
 
 import by.bsuir.foodordering.api.dto.create.CreateOrderDto;
+import by.bsuir.foodordering.api.dto.create.CreateOrderItemDto;
 import by.bsuir.foodordering.api.dto.get.OrderDto;
 import by.bsuir.foodordering.api.dto.get.OrderInfoDto;
+import by.bsuir.foodordering.core.cache.Cache;
 import by.bsuir.foodordering.core.exception.CreatedEntityException;
 import by.bsuir.foodordering.core.exception.EntityNotFoundException;
 import by.bsuir.foodordering.core.exception.MakeOrderException;
@@ -20,6 +22,7 @@ import by.bsuir.foodordering.core.service.OrderService;
 import jakarta.transaction.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -39,6 +42,7 @@ public class OrderServiceImpl implements OrderService {
     private final CreateOrderItemMapper createOrderItemMapper;
     private final UserRepository userRepository;
     private final OrderHistoryServiceImpl orderHistoryService;
+    private final Cache foodCache;
 
     private List<OrderItem> toOrderItemMap(List<Long> orderItemIds) {
         return orderItemIds
@@ -127,29 +131,54 @@ public class OrderServiceImpl implements OrderService {
         if (createOrderDto == null || createOrderDto.getCreateOrderItems().isEmpty()) {
             throw new CreatedEntityException("Create order items cannot be empty");
         }
+
         Order newOrder = new Order();
+
         newOrder.setUser(userRepository.findById(createOrderDto.getUserId())
                 .orElseThrow(
                         () -> new EntityNotFoundException(
                                 "User not found with id: " + createOrderDto.getUserId())
                 )
         );
-        newOrder.setCreatedAt(LocalDateTime.now());
-        newOrder.setOrderItems(createOrderDto.getCreateOrderItems()
-                .stream().map(dto -> createOrderItemMapper.toEntity(dto, foodRepository))
-                        .toList());
-        newOrder.getOrderItems().forEach(orderItem -> orderItem.setOrder(newOrder));
-        newOrder.getOrderItems().forEach(orderItem -> orderItem
-                .setTotalPrice(BigDecimal
-                        .valueOf(orderItem.getCount())
-                        .multiply(orderItem.getFood().getPrice())));
 
+        newOrder.setCreatedAt(LocalDateTime.now());
+
+        List<OrderItem> orderItems = new ArrayList<>();
+        OrderItem orderItem;
+        Long foodId;
         BigDecimal totalPrice = BigDecimal.ZERO;
 
-        for (OrderItem orderItem : newOrder.getOrderItems()) {
+        for (CreateOrderItemDto orderItemDto : createOrderDto.getCreateOrderItems()) {
+
+            foodId = orderItemDto.getFoodId();
+            orderItem = createOrderItemMapper.toEntity(orderItemDto);
+
+            if (foodCache.get(foodId)  != null) {
+                orderItem.setFood(foodCache.get(foodId));
+            } else {
+                orderItem.setFood(foodRepository
+                        .findById(foodId)
+                        .orElseThrow(
+                                () -> new EntityNotFoundException(
+                                        "Food not found with id: " + orderItemDto.getFoodId()
+                                )
+                        )
+                );
+            }
+            orderItem.setTotalPrice(
+                    BigDecimal.valueOf(
+                            orderItem.getCount()
+                            )
+                            .multiply(orderItem.getFood().getPrice()));
+
+            orderItems.add(orderItem);
+            orderItem.setOrder(newOrder);
             totalPrice = totalPrice.add(orderItem.getTotalPrice());
         }
+
+        newOrder.setOrderItems(orderItems);
         newOrder.setTotalPrice(totalPrice);
+
         return orderMapper.toDto(orderRepository.save(newOrder));
     }
 
@@ -173,6 +202,24 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public List<OrderInfoDto> findAll() {
         List<Order> orders = orderRepository.findAll();
+        updateOrdersList(orders);
+        return orders
+                .stream()
+                .map(order -> orderInfoMapper.toDto(order, orderItemMapper)).toList();
+    }
+
+    @Override
+    public List<OrderInfoDto> findByCountFood(int count) {
+        List<Order> orders = orderRepository.findByCountFood(count);
+        updateOrdersList(orders);
+        return orders
+                .stream()
+                .map(order -> orderInfoMapper.toDto(order, orderItemMapper)).toList();
+    }
+
+    @Override
+    public List<OrderInfoDto> findByFoodName(String foodName) {
+        List<Order> orders = orderRepository.findByFoodName(foodName);
         updateOrdersList(orders);
         return orders
                 .stream()

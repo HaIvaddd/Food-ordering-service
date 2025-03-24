@@ -9,6 +9,10 @@ public interface OrderService {
 
     List<OrderInfoDto> findAll();
 
+    List<OrderInfoDto> findByCountFood(int count);
+
+    List<OrderInfoDto> findByFoodName(String foodName);
+
     List<OrderDto> findByUserId(Long userId);
 
     OrderDto update(OrderDto orderDto);

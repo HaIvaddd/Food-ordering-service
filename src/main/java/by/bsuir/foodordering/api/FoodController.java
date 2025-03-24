@@ -3,6 +3,7 @@ package by.bsuir.foodordering.api;
 import by.bsuir.foodordering.api.dto.create.CreateFoodDto;
 import by.bsuir.foodordering.api.dto.get.FoodDto;
 import by.bsuir.foodordering.core.service.impl.FoodServiceImpl;
+import jakarta.validation.Valid;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -28,7 +29,7 @@ public class FoodController {
     }
 
     @PostMapping("/create")
-    public FoodDto createFood(@RequestBody CreateFoodDto createFoodDto) {
+    public FoodDto createFood(@Valid @RequestBody CreateFoodDto createFoodDto) {
         return foodServiceImpl.create(createFoodDto);
     }
 
