@@ -1,5 +1,6 @@
 package by.bsuir.foodordering.core.service.impl;
 
+import by.bsuir.foodordering.core.exception.EntityNotFoundException;
 import by.bsuir.foodordering.core.models.Order;
 import by.bsuir.foodordering.core.models.OrderHistoryItem;
 import by.bsuir.foodordering.core.models.OrderItem;
@@ -19,6 +20,9 @@ public class OrderHistoryServiceImpl implements OrderHistoryService {
 
     @Override
     public void removeOrderFromHistory(Long id) {
+        if (!orderHistoryRepository.existsById(id)) {
+            throw new EntityNotFoundException("Order not found with id: " + id);
+        }
         orderHistoryRepository.deleteById(id);
     }
 

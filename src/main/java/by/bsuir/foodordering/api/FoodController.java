@@ -2,6 +2,7 @@ package by.bsuir.foodordering.api;
 
 import by.bsuir.foodordering.api.dto.create.CreateFoodDto;
 import by.bsuir.foodordering.api.dto.get.FoodDto;
+import by.bsuir.foodordering.core.annotation.Timed;
 import by.bsuir.foodordering.core.service.impl.FoodServiceImpl;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -26,6 +27,12 @@ public class FoodController {
     @GetMapping(params = "type")
     public List<FoodDto> findFoodByType(@RequestParam("type") String foodType) {
         return foodServiceImpl.findByType(foodType);
+    }
+
+    @Timed
+    @GetMapping("/{id}")
+    public FoodDto findFoodById(@PathVariable Long id) {
+        return foodServiceImpl.findById(id);
     }
 
     @PostMapping("/create")

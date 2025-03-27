@@ -3,6 +3,7 @@ package by.bsuir.foodordering.core.service.impl;
 import by.bsuir.foodordering.api.dto.create.CreateUserDto;
 import by.bsuir.foodordering.api.dto.get.UserDto;
 import by.bsuir.foodordering.core.exception.EntityNotFoundException;
+import by.bsuir.foodordering.core.exception.UserTypeException;
 import by.bsuir.foodordering.core.mapper.create.CreateUserMapper;
 import by.bsuir.foodordering.core.mapper.get.UserMapper;
 import by.bsuir.foodordering.core.models.User;
@@ -36,7 +37,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserDto create(CreateUserDto createUserDto) {
+    public UserDto create(CreateUserDto createUserDto) throws UserTypeException {
         return userMapper.toDto(userRepository.save(createUserMapper.toEntity(createUserDto)));
     }
 

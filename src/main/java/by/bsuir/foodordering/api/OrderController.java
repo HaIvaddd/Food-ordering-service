@@ -3,6 +3,7 @@ package by.bsuir.foodordering.api;
 import by.bsuir.foodordering.api.dto.create.CreateOrderDto;
 import by.bsuir.foodordering.api.dto.get.OrderDto;
 import by.bsuir.foodordering.api.dto.get.OrderInfoDto;
+import by.bsuir.foodordering.core.annotation.Timed;
 import by.bsuir.foodordering.core.service.impl.OrderServiceImpl;
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -39,6 +40,7 @@ public class OrderController {
         return orderServiceImpl.makeOrderById(id);
     }
 
+    @Timed
     @PostMapping("/create")
     public OrderDto createOrder(@RequestBody CreateOrderDto createOrderDto) {
         return orderServiceImpl.create(createOrderDto);

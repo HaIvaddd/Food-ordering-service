@@ -4,6 +4,7 @@ import by.bsuir.foodordering.api.dto.create.CreateOrderDto;
 import by.bsuir.foodordering.api.dto.create.CreateOrderItemDto;
 import by.bsuir.foodordering.api.dto.get.OrderDto;
 import by.bsuir.foodordering.api.dto.get.OrderInfoDto;
+import by.bsuir.foodordering.core.annotation.Timed;
 import by.bsuir.foodordering.core.cache.Cache;
 import by.bsuir.foodordering.core.exception.CreatedEntityException;
 import by.bsuir.foodordering.core.exception.EntityNotFoundException;
@@ -126,6 +127,7 @@ public class OrderServiceImpl implements OrderService {
         return orderMapper.toDto(order);
     }
 
+    @Timed
     @Override
     public OrderDto create(CreateOrderDto createOrderDto) {
         if (createOrderDto == null || createOrderDto.getCreateOrderItems().isEmpty()) {
@@ -156,13 +158,13 @@ public class OrderServiceImpl implements OrderService {
             if (foodCache.get(foodId)  != null) {
                 orderItem.setFood(foodCache.get(foodId));
             } else {
-                orderItem.setFood(foodRepository
+                orderItem.setFood(foodCache.put(foodRepository
                         .findById(foodId)
                         .orElseThrow(
                                 () -> new EntityNotFoundException(
                                         "Food not found with id: " + orderItemDto.getFoodId()
                                 )
-                        )
+                        ))
                 );
             }
             orderItem.setTotalPrice(
