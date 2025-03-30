@@ -29,8 +29,9 @@ public class FoodServiceImpl implements FoodService {
 
     @Override
     public FoodDto findById(Long id) {
-        if (foodCache.get(id) != null) {
-            return foodMapper.toDto(foodCache.get(id));
+        Food food = foodCache.get(id);
+        if (food != null) {
+            return foodMapper.toDto(food);
         } else {
             return foodMapper.toDto(
                     foodCache.put(foodRepository
@@ -47,7 +48,7 @@ public class FoodServiceImpl implements FoodService {
             throw new IllegalArgumentException("Food is null");
         }
         Food food = createFoodMapper.toEntity(foodDto);
-        return foodMapper.toDto(foodRepository.save(foodCache.put(food)));
+        return foodMapper.toDto(foodRepository.save(food));
     }
 
     @Override
@@ -57,22 +58,21 @@ public class FoodServiceImpl implements FoodService {
             throw new IllegalArgumentException();
         }
 
-        Food existingFood = foodCache.get(foodDto.getId());
-
-        if  (existingFood == null) {
-            existingFood = foodRepository.findById(foodDto.getId())
-                    .orElseThrow(
-                            () -> new EntityNotFoundException(
-                                    FOOD_EX + foodDto.getId()
-                            )
-                    );
-        }
+        Food existingFood = foodRepository.findById(foodDto.getId())
+                .orElseThrow(
+                        () -> new EntityNotFoundException(
+                                FOOD_EX + foodDto.getId()
+                        )
+                );
 
         Food mergedFood = foodMapper.merge(existingFood, foodDto);
 
-        foodCache.put(mergedFood);
+        existingFood = foodCache.get(foodDto.getId());
 
-        return foodMapper.toDto(mergedFood);
+        if  (existingFood == null) {
+            foodCache.put(mergedFood);
+        }
+        return foodMapper.toDto(foodCache.put(mergedFood));
     }
 
     @Override
