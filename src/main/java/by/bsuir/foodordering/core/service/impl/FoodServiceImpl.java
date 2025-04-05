@@ -1,5 +1,7 @@
 package by.bsuir.foodordering.core.service.impl;
 
+import static java.util.Collections.emptyList;
+
 import by.bsuir.foodordering.api.dto.create.CreateFoodDto;
 import by.bsuir.foodordering.api.dto.get.FoodDto;
 import by.bsuir.foodordering.core.cache.Cache;
@@ -16,6 +18,7 @@ import java.util.List;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
+
 @Service
 @AllArgsConstructor
 public class FoodServiceImpl implements FoodService {
@@ -24,6 +27,7 @@ public class FoodServiceImpl implements FoodService {
 
     private final FoodMapper foodMapper;
     private final CreateFoodMapper createFoodMapper;
+
     private final FoodRepository foodRepository;
     private final Cache foodCache;
 
@@ -39,6 +43,16 @@ public class FoodServiceImpl implements FoodService {
                             .orElseThrow(() -> new EntityNotFoundException(FOOD_EX + id)
                             ))
             );
+        }
+    }
+
+    @Override
+    public FoodDto findByName(String name) {
+        Food food = foodCache.get(name);
+        if (food != null) {
+            return foodMapper.toDto(food);
+        } else {
+            return foodMapper.toDto(foodRepository.findByName(name));
         }
     }
 
@@ -98,5 +112,25 @@ public class FoodServiceImpl implements FoodService {
             throw new FoodTypeException("Invalid food type: " + type);
         }
 
+    }
+
+    @Override
+    public List<FoodDto> createBulk(List<CreateFoodDto> foodDtos) {
+        if (foodDtos == null) {
+            throw new IllegalArgumentException("Input food DTO list cannot be null");
+        }
+        if (foodDtos.isEmpty()) {
+            return emptyList();
+        }
+
+        List<Food> foodsToSave = foodDtos.stream()
+                .map(createFoodMapper::toEntity)
+                .toList();
+
+        List<Food> savedFoods = foodRepository.saveAll(foodsToSave);
+
+        return savedFoods.stream()
+                .map(foodMapper::toDto)
+                .toList();
     }
 }

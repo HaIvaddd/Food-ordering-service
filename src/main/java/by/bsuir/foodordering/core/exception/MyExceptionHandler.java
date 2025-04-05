@@ -85,4 +85,16 @@ public class MyExceptionHandler {
         return ResponseEntity.badRequest().body(errors);
     }
 
+    @ExceptionHandler(DateException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ResponseBody
+    public ResponseEntity<Map<String, String>>
+        handleDateExceptions(DateException ex) {
+        Map<String, String> errors = new HashMap<>();
+        errors.put(EXC,  "Date");
+        errors.put(MSG,  ex.getMessage());
+        logger.warn("Date log '{}': {}",
+                ex.getClass().getName(), ex.getMessage());
+        return ResponseEntity.badRequest().body(errors);
+    }
 }

@@ -10,7 +10,11 @@ public interface FoodService {
 
     List<FoodDto> findByType(String type);
 
+    List<FoodDto> createBulk(List<CreateFoodDto> foodDtos);
+
     FoodDto findById(Long id);
+
+    FoodDto findByName(String name);
 
     FoodDto create(CreateFoodDto foodDto);
 

@@ -24,6 +24,7 @@ import jakarta.transaction.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -62,20 +63,22 @@ public class OrderServiceImpl implements OrderService {
 
     private void updateOrdersList(List<Order> orders) {
         BigDecimal totalPrice;
-        for (Order order : orders) {
+        Iterator<Order> iterator = orders.iterator();
+
+        while (iterator.hasNext()) {
+            Order order = iterator.next();
 
             totalPrice = BigDecimal.ZERO;
 
             if (order.getOrderItems().isEmpty()) {
-                orders.remove(order);
+                iterator.remove();
                 orderRepository.delete(order);
-                continue;
+            } else {
+                for (OrderItem orderItem : order.getOrderItems()) {
+                    totalPrice = totalPrice.add(orderItem.getTotalPrice());
+                }
+                order.setTotalPrice(totalPrice);
             }
-
-            for (OrderItem orderItem : order.getOrderItems()) {
-                totalPrice = totalPrice.add(orderItem.getTotalPrice());
-            }
-            order.setTotalPrice(totalPrice);
         }
     }
 

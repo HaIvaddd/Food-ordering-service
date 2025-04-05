@@ -43,4 +43,13 @@ public class Cache {
         return food;
     }
 
+    public Food get(String foodName) {
+        Food food = foodCache.values().stream()
+                .filter(f -> f.getName().equals(foodName)).findFirst().orElse(null);
+        if (food != null) {
+            logger.info("get food from cache: {}", foodName);
+        }
+        return food;
+    }
+
 }

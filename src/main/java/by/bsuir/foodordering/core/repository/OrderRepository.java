@@ -19,7 +19,7 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     @Query("SELECT o FROM Order o JOIN o.orderItems i WHERE i.count = :count")
     List<Order> findByCountFood(@Param("count") int count);
 
-    @Query(value = "SELECT * FROM orders o "
+    @Query(value = "SELECT o.* FROM orders o "
             + "JOIN order_items oi ON oi.order_id = o.id "
             + "JOIN food f ON f.id = oi.food_id "
             + "WHERE f.name = :foodName", nativeQuery = true)

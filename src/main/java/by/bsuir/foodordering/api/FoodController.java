@@ -77,6 +77,26 @@ public class FoodController {
         return foodServiceImpl.findById(id);
     }
 
+    @Timed
+    @Operation(summary = "Find a food item by name",
+            description = "Retrieves details of a specific food item by its unique name.")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Successfully retrieved the food item",
+                content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                        schema = @Schema(implementation = FoodDto.class))),
+        @ApiResponse(responseCode = "404",
+                description = "Food item not found",
+                content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                        schema = @Schema(implementation = Map.class)))
+    })
+    @GetMapping("/by-name")
+    public FoodDto findFoodByName(
+            @Parameter(description = "The type of food",
+                    required = true, example = "PIZZA")
+            @RequestParam("name") String foodName) {
+        return foodServiceImpl.findByName(foodName);
+    }
+
     @Operation(summary = "Create a new food item",
             description = "Adds a new food item to the system based on the provided data.")
     @ApiResponses(value = {
@@ -139,7 +159,7 @@ public class FoodController {
             @RequestBody(description = "Updated data for the food item (must include the ID)",
                     required = true,
                     content = @Content(schema = @Schema(implementation = FoodDto.class)))
-            @org.springframework.web.bind.annotation.RequestBody FoodDto foodDto) {
+            @Valid @org.springframework.web.bind.annotation.RequestBody FoodDto foodDto) {
         return foodServiceImpl.update(foodDto);
     }
 
@@ -153,6 +173,43 @@ public class FoodController {
     @GetMapping
     public List<FoodDto> findFoodAll() {
         return foodServiceImpl.findAll();
+    }
+
+
+    @PostMapping("/bulk")
+    @Operation(
+            summary = "Create multiple food items",
+            description = "Accepts a list of food items (as CreateFoodDto) in the request "
+                    + "body and creates them in bulk. Returns a list of the created "
+                    + "food items (as FoodDto) including their generated IDs."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(
+                responseCode = "201",
+                description = "Food items created successfully",
+                content = @Content(
+                        mediaType = "application/json",
+                        schema = @Schema(implementation = FoodDto.class)
+                )
+            ),
+        @ApiResponse(
+                responseCode = "400",
+                description = "Invalid input data",
+                content = @Content
+            ),
+        @ApiResponse(
+                responseCode = "500",
+                description = "Internal server error during creation",
+                content = @Content
+            )
+    })
+    public ResponseEntity<List<FoodDto>> createFoodsBulk(
+            @Valid @org.springframework.web.bind.annotation.RequestBody
+            List<CreateFoodDto> createFoodDtos) {
+
+        List<FoodDto> createdDtos = foodServiceImpl.createBulk(createFoodDtos);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdDtos);
     }
 }
 

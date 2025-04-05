@@ -59,7 +59,6 @@ public class LogController {
                                 format = "binary",
                                 description = "Log file content"))),
         @ApiResponse(responseCode = "400", description = "Invalid date format provided",
-                // Ошибка все еще может вернуть JSON или текст с описанием
                 content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                         schema = @Schema(implementation = Map.class))),
         @ApiResponse(responseCode = "404",
@@ -85,13 +84,11 @@ public class LogController {
         try {
             requestedDate = LocalDate.parse(dateStr, DateTimeFormatter.ISO_DATE);
         } catch (DateTimeParseException e) {
-            logger.warn("Invalid date format received: {}", dateStr);
-            return ResponseEntity.badRequest().body(null);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
 
         Path path = Paths.get(logFilePath);
         if (!Files.exists(path)) {
-            logger.error("Log file not found at path: {}", logFilePath);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
 
