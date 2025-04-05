@@ -93,7 +93,7 @@ public class FoodController {
     public FoodDto findFoodByName(
             @Parameter(description = "The type of food",
                     required = true, example = "PIZZA")
-            @RequestParam("name") String foodName) {
+            @Valid @RequestParam("name") String foodName) {
         return foodServiceImpl.findByName(foodName);
     }
 
