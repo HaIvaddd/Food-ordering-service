@@ -94,8 +94,8 @@ public class FoodController {
     })
     @GetMapping("/by-name")
     public FoodDto findFoodByName(
-            @Parameter(description = "The type of food",
-                    required = true, example = "PIZZA")
+            @Parameter(description = "The name of food",
+                    required = true, example = "Cola")
             @Valid @RequestParam("name") String foodName) {
         if (foodName == null || foodName.trim().isEmpty()) {
             throw new IllegalArgumentException("Food name cannot be empty");

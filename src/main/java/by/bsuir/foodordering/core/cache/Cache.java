@@ -47,7 +47,7 @@ public class Cache {
         Food food = foodCache.values().stream()
                 .filter(f -> f.getName().equals(foodName)).findFirst().orElse(null);
         if (food != null) {
-            logger.info("get food from cache: {}", foodName);
+            logger.info("get food from cache: {}", food.getName());
         }
         return food;
     }
