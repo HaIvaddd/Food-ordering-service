@@ -97,4 +97,16 @@ public class MyExceptionHandler {
                 ex.getClass().getName(), ex.getMessage());
         return ResponseEntity.badRequest().body(errors);
     }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ResponseBody
+    public ResponseEntity<Map<String, String>>
+        handleArgumentExceptions(IllegalArgumentException ex) {
+        Map<String, String> errors = new HashMap<>();
+        errors.put(EXC,  "Argument exception");
+        errors.put(MSG,  ex.getMessage());
+        logger.warn("Argument error in field '{}': {}", ex.getClass().getName(), ex.getMessage());
+        return ResponseEntity.badRequest().body(errors);
+    }
 }

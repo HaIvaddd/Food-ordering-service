@@ -16,6 +16,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -35,6 +36,8 @@ import org.springframework.web.bind.annotation.RestController;
 @AllArgsConstructor
 @Tag(name = "Food API", description = "Operations related to managing food items")
 public class FoodController {
+
+    private static final Pattern VALID_FOOD_NAME_PATTERN = Pattern.compile("^[a-zA-Z0-9-]{1,100}$");
 
     private final FoodServiceImpl foodServiceImpl;
 
@@ -94,6 +97,12 @@ public class FoodController {
             @Parameter(description = "The type of food",
                     required = true, example = "PIZZA")
             @Valid @RequestParam("name") String foodName) {
+        if (foodName == null || foodName.trim().isEmpty()) {
+            throw new IllegalArgumentException("Food name cannot be empty");
+        }
+        if (!VALID_FOOD_NAME_PATTERN.matcher(foodName).matches()) {
+            throw new IllegalArgumentException("Invalid characters or length in food name");
+        }
         return foodServiceImpl.findByName(foodName);
     }
 
