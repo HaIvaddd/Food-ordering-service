@@ -31,11 +31,11 @@ public class MyExceptionHandler {
             logger.warn("Validation error in field '{}': {}",
                     error.getField(), error.getDefaultMessage());
         });
-        return ResponseEntity.badRequest().body(errors);
+        return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler({UserTypeException.class, FoodTypeException.class})
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
     @ResponseBody
     public ResponseEntity<Map<String, String>>
         handleTypeExceptions(Exception ex) {
@@ -43,7 +43,7 @@ public class MyExceptionHandler {
         errors.put(EXC,  "Type not found");
         errors.put(MSG,  ex.getMessage());
         logger.warn("Type error in field '{}': {}", ex.getClass().getName(), ex.getMessage());
-        return ResponseEntity.badRequest().body(errors);
+        return new ResponseEntity<>(errors, HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(CreatedEntityException.class)
@@ -56,11 +56,11 @@ public class MyExceptionHandler {
         errors.put(MSG,  ex.getMessage());
         logger.warn("Created entity error in field '{}': {}",
                 ex.getClass().getName(), ex.getMessage());
-        return ResponseEntity.badRequest().body(errors);
+        return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(EntityNotFoundException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
     @ResponseBody
     public ResponseEntity<Map<String, String>>
         handleEntityNotFoundExceptions(EntityNotFoundException ex) {
@@ -69,7 +69,7 @@ public class MyExceptionHandler {
         errors.put(MSG,  ex.getMessage());
         logger.warn("Entity not found in field '{}': {}",
                 ex.getClass().getName(), ex.getMessage());
-        return ResponseEntity.badRequest().body(errors);
+        return new ResponseEntity<>(errors, HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(MakeOrderException.class)
@@ -107,6 +107,6 @@ public class MyExceptionHandler {
         errors.put(EXC,  "Argument exception");
         errors.put(MSG,  ex.getMessage());
         logger.warn("Argument error in field '{}': {}", ex.getClass().getName(), ex.getMessage());
-        return ResponseEntity.badRequest().body(errors);
+        return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
     }
 }

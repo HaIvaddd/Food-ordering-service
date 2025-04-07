@@ -84,7 +84,7 @@ public class LogController {
         try {
             requestedDate = LocalDate.parse(dateStr, DateTimeFormatter.ISO_DATE);
         } catch (DateTimeParseException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
 
         Path path = Paths.get(logFilePath);

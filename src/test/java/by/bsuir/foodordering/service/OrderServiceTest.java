@@ -56,6 +56,8 @@ class OrderServiceTest {
     @Mock
     private CreateOrderItemMapper createOrderItemMapper;
     @Mock
+    private OrderItemMapper orderItemMapper;
+    @Mock
     private UserRepository userRepository;
     @Mock
     private OrderHistoryServiceImpl orderHistoryService;
