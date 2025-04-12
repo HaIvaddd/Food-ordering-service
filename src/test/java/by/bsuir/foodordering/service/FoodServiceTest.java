@@ -39,6 +39,9 @@ class FoodServiceTest {
 
     @Captor
     private ArgumentCaptor<Food> foodCaptor;
+    @Captor
+    private ArgumentCaptor<List<Food>> foodListCaptor;
+
 
     private final Long foodId = 1L;
     private final String foodName = "Pizza Margherita";
@@ -379,5 +382,83 @@ class FoodServiceTest {
         verify(foodRepository, never()).findByFoodType(any(FoodType.class)); // Репозиторий не вызывался
         verify(foodMapper, never()).toDto(any(Food.class));
         verifyNoInteractions(foodCache);
+    }
+
+    @Test
+    void createBulk_whenListIsValid_shouldMapSaveAllMapBackAndReturnDtos() throws FoodTypeException {
+        CreateFoodDto createFoodDto2 = new CreateFoodDto();
+        createFoodDto2.setName("Burger");
+        createFoodDto2.setPrice(BigDecimal.valueOf(12.50));
+        createFoodDto2.setFoodTypeStr("BURGER");
+        List<CreateFoodDto> inputDtos = List.of(testCreateFoodDto, createFoodDto2);
+
+        Food foodToSave1 = new Food(null, testCreateFoodDto.getName(), testCreateFoodDto.getPrice(), FoodType.PIZZA);
+        Food foodToSave2 = new Food(null, createFoodDto2.getName(), createFoodDto2.getPrice(), FoodType.BURGER);
+
+        Food savedFood1 = new Food(1L, foodToSave1.getName(), foodToSave1.getPrice(), foodToSave1.getFoodType());
+        Food savedFood2 = new Food(2L, foodToSave2.getName(), foodToSave2.getPrice(), foodToSave2.getFoodType());
+        List<Food> savedFoods = List.of(savedFood1, savedFood2);
+
+        FoodDto resultDto1 = new FoodDto();
+        resultDto1.setId(1L);
+        resultDto1.setName(savedFood1.getName());
+        resultDto1.setPrice(savedFood1.getPrice());
+        resultDto1.setFoodTypeStr(savedFood1.getFoodType().name());
+
+        FoodDto resultDto2 = new FoodDto();
+        resultDto2.setId(2L);
+        resultDto2.setName(savedFood2.getName());
+        resultDto2.setPrice(savedFood2.getPrice());
+        resultDto2.setFoodTypeStr(savedFood2.getFoodType().name());
+        List<FoodDto> expectedResultDtos = List.of(resultDto1, resultDto2);
+
+        when(createFoodMapper.toEntity(testCreateFoodDto)).thenReturn(foodToSave1);
+        when(createFoodMapper.toEntity(createFoodDto2)).thenReturn(foodToSave2);
+        when(foodRepository.saveAll(anyList())).thenReturn(savedFoods);
+        when(foodMapper.toDto(savedFood1)).thenReturn(resultDto1);
+        when(foodMapper.toDto(savedFood2)).thenReturn(resultDto2);
+
+        List<FoodDto> result = foodService.createBulk(inputDtos);
+
+        assertNotNull(result);
+        assertEquals(2, result.size());
+        assertEquals(expectedResultDtos, result);
+
+        verify(createFoodMapper).toEntity(testCreateFoodDto);
+        verify(createFoodMapper).toEntity(createFoodDto2);
+        verify(foodRepository).saveAll(foodListCaptor.capture());
+        List<Food> capturedFoodsToSave = foodListCaptor.getValue();
+        assertEquals(2, capturedFoodsToSave.size());
+        assertTrue(capturedFoodsToSave.contains(foodToSave1));
+        assertTrue(capturedFoodsToSave.contains(foodToSave2));
+        verify(foodMapper).toDto(savedFood1);
+        verify(foodMapper).toDto(savedFood2);
+        verify(foodRepository, never()).save(any(Food.class));
+        verifyNoInteractions(foodCache);
+    }
+
+    @Test
+    void createBulk_whenInputListIsNull_shouldThrowIllegalArgumentException() {
+        List<CreateFoodDto> nullList = null;
+
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> foodService.createBulk(nullList)
+        );
+        assertEquals("Input food DTO list cannot be null", exception.getMessage());
+
+        verifyNoInteractions(createFoodMapper, foodRepository, foodMapper, foodCache);
+    }
+
+    @Test
+    void createBulk_whenInputListIsEmpty_shouldReturnEmptyList() throws FoodTypeException {
+        List<CreateFoodDto> emptyList = Collections.emptyList();
+
+        List<FoodDto> result = foodService.createBulk(emptyList);
+
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+
+        verifyNoInteractions(createFoodMapper, foodRepository, foodMapper, foodCache);
     }
 }

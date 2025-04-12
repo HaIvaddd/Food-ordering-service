@@ -1,3 +1,4 @@
+
 package by.bsuir.foodordering.api;
 
 import by.bsuir.foodordering.core.service.impl.AsyncLogService;
