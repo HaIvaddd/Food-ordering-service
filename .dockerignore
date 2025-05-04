@@ -1,0 +1,11 @@
+.gradle
+build
+.git
+.gitignore
+gradlew.bat
+gradle/wrapper/gradle-wrapper.jar
+*.log
+.idea/
+*.iml
+target/
+# Добавь сюда любые другие ненужные файлы/папки

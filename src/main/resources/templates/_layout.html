@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:fragment="head(pageTitle)"> <!-- Фрагмент для head -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle} + ' - bsuir-лавка'"></title>
+    <link rel="stylesheet" type="text/css" th:href="@{/css/style.css}" />
+</head>
+<body>
+
+<!-- Фрагмент для шапки -->
+<header th:fragment="header">
+    <div class="logo">bsuir-лавка</div>
+    <nav>
+        <ul>
+            <!-- Используем переменную activePage для проверки -->
+            <li><a th:href="@{/ui/orders}"
+                   th:classappend="${activePage == 'orders'} ? 'active' : ''">Заказы</a></li>
+            <li><a th:href="@{/ui/food}"
+                   th:classappend="${activePage == 'food'} ? 'active' : ''">Еда</a></li>
+            <li><a th:href="@{/ui/users}"
+                   th:classappend="${activePage == 'users'} ? 'active' : ''">Пользователи</a></li>
+            <!-- Добавь сюда другие ссылки по аналогии, если нужно -->
+        </ul>
+    </nav>
+</header>
+
+<!-- Основной контейнер для контента страницы -->
+<!-- th:fragment="layout" определяет основной шаблон. ~{::main} вставляет содержимое тега <main> из вызывающей страницы -->
+<div class="container" th:fragment="layout(content)">
+    <!-- Вставляем сюда основной контент -->
+    <th:block th:replace="${content}" />
+</div>
+
+<!-- TODO: Можно добавить подвал (footer) сюда, если нужно -->
+
+</body>
+</html>

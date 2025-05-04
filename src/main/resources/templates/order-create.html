@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<!--
+    Универсальный шаблон для создания и редактирования заказа.
+    Ожидаемые переменные из модели:
+    - pageTitle (String): Заголовок страницы ("Создать Заказ" или "Редактировать Заказ #ID")
+    - isEditMode (boolean): true для режима редактирования, false для создания
+    - formAction (String): URL для атрибута action формы ("/ui/orders/create" или "/ui/orders/update")
+    - allUsers (List<UserDto>): Список всех пользователей для выбора
+    - allFoods (List<FoodDto>): Список всей еды для добавления
+    - orderId (Long): ID заказа (только в режиме редактирования, для скрытого поля)
+    - selectedUserId (Long): ID пользователя, который должен быть выбран (только в режиме редактирования)
+    - initialOrderItemsJson (String): JSON-строка с начальными позициями заказа Map<foodId, {name, count}> (только в режиме редактирования)
+    - errorMessage (String, optional): Сообщение об ошибке для отображения
+    - successMessage (String, optional): Сообщение об успехе для отображения
+-->
+<head th:replace="~{_layout :: head(${pageTitle ?: (isEditMode ? 'Редактировать Заказ' : 'Создать Заказ')})}"></head>
+<!-- Устанавливаем isEditMode в контекст для удобства, по умолчанию false -->
+<body th:with="isEditMode=${isEditMode ?: false}">
+
+<!-- Подключаем общую шапку -->
+<header th:replace="~{_layout :: header}"></header>
+
+<!-- Основной контейнер -->
+<main class="container">
+    <!-- Динамический заголовок H1 -->
+    <h1 th:text="${pageTitle}">Создать/Редактировать Заказ</h1>
+
+    <!-- Отображение сообщений обратной связи -->
+    <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
+    <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
+
+    <!-- Основная форма -->
+    <!-- Атрибут action устанавливается динамически из контроллера -->
+    <form id="create-order-form" th:action="@{${formAction}}" method="post">
+
+        <!-- Скрытое поле с ID заказа - отображается только в режиме редактирования -->
+        <input type="hidden" name="orderId" th:if="${isEditMode}" th:value="${orderId}" />
+
+        <!-- ========================== -->
+        <!-- 1. Выбор пользователя      -->
+        <!-- ========================== -->
+        <div class="form-group">
+            <label for="user-select">Выберите пользователя:</label>
+            <!-- 'name="userId"' - важно для привязки к CreateOrderDto/UpdateOrderDto -->
+            <!-- 'th:data-selected-id' - для JS (хотя th:selected ниже надежнее) -->
+            <select id="user-select" name="userId" required class="form-control" th:data-selected-id="${selectedUserId ?: ''}">
+                <option value="">-- Выберите пользователя --</option>
+                <!-- Итерация по списку пользователей из модели -->
+                <option th:each="user : ${allUsers}"
+                        th:value="${user.id}"
+                        th:text="${user.name + ' (' + user.email + ')'}"
+                        th:selected="${isEditMode and user.id == selectedUserId}">
+                        Имя Пользователя (email)
+                </option>
+            </select>
+            <!-- Здесь можно добавить span для ошибок валидации поля userId, если необходимо -->
+            <!-- <span th:if="${#fields.hasErrors('userId')}" ... -->
+        </div>
+
+        <hr>
+
+        <!-- ========================== -->
+        <!-- 2. Добавление позиций     -->
+        <!-- ========================== -->
+        <h2>Добавить позицию в заказ</h2>
+        <div class="form-row" style="display: flex; align-items: flex-end; gap: 15px; margin-bottom: 20px;">
+            <!-- Выпадающий список еды -->
+            <div class="form-group" style="flex-grow: 1;">
+                <label for="food-select">Выберите блюдо:</label>
+                <select id="food-select" class="form-control">
+                    <option value="">-- Выберите блюдо --</option>
+                    <option th:each="food : ${allFoods}"
+                            th:value="${food.id}"
+                    th:attr="data-food-name=${food.name}"
+                    th:text="${food.name + ' (' + #numbers.formatDecimal(food.price, 1, 'COMMA', 2, 'POINT') + ' руб.)'}">
+                    Название Блюда (Цена)
+                    </option>
+                </select>
+            </div>
+            <!-- Кнопка добавления -->
+            <div class="form-group">
+                <button type="button" id="add-food-btn" class="btn btn-secondary">Добавить в заказ</button>
+            </div>
+        </div>
+
+        <hr>
+
+        <!-- ========================== -->
+        <!-- 3. Таблица позиций заказа -->
+        <!-- ========================== -->
+        <h2>Позиции текущего заказа</h2>
+        <table class="table table-striped" style="margin-bottom: 20px;">
+            <thead>
+            <tr>
+                <th>Название Блюда</th>
+                <th style="width: 150px; text-align: center;">Количество</th>
+                <th style="width: 100px; text-align: center;">Действия</th>
+            </tr>
+            </thead>
+            <!-- Тело таблицы, заполняемое JavaScript -->
+            <tbody id="order-items-tbody">
+            <!-- Заглушка, которая будет удалена/заменена при добавлении первой позиции -->
+            <tr id="empty-row-placeholder">
+                <td colspan="3" style="text-align: center; color: #888;">Заказ пуст. Добавьте блюда выше.</td>
+            </tr>
+            </tbody>
+        </table>
+
+        <!-- ======================================================= -->
+        <!-- 4. Скрытый контейнер для полей позиций заказа         -->
+        <!-- ======================================================= -->
+        <!-- JavaScript будет динамически добавлять сюда input-ы    -->
+        <!-- вида <input type="hidden" name="createOrderItems[0].foodId" value="123"> -->
+        <!-- и <input type="hidden" name="createOrderItems[0].count" value="2"> -->
+        <!-- Имена полей важны для автоматического связывания в Spring -->
+        <div id="hidden-items-container"></div>
+
+
+        <!-- ========================== -->
+        <!-- 5. Кнопки действий формы   -->
+        <!-- ========================== -->
+        <div class="form-actions">
+            <!-- Текст кнопки меняется в зависимости от режима -->
+            <button type="submit" id="submit-order-btn" class="btn btn-primary" disabled
+                    th:text="${isEditMode} ? 'Обновить Заказ' : 'Создать Заказ'">
+                Создать/Обновить Заказ
+            </button>
+            <!-- Ссылка для отмены и возврата к списку заказов -->
+            <a th:href="@{/ui/orders}" class="btn">Отмена</a>
+        </div>
+
+    </form> <!-- Конец формы -->
+</main>
+
+<!-- ========================== -->
+<!-- JavaScript                -->
+<!-- ========================== -->
+<script th:inline="javascript">
+    /*<![CDATA[*/
+
+    // Получаем данные из модели Thymeleaf для инициализации
+    const isEditMode = /*[[${isEditMode}]]*/ false;
+    const initialUserId = /*[[${selectedUserId}]]*/ null; // ID пользователя для предвыбора
+    // Пытаемся распарсить JSON с начальными позициями заказа
+    let initialOrderItems = {};
+    try {
+        initialOrderItems = JSON.parse(/*[[${initialOrderItemsJson ?: '{}'}]]*/ '{}');
+    } catch (e) {
+        console.error("Error parsing initial order items JSON:", e);
+        // Оставляем initialOrderItems пустым объектом в случае ошибки
+    }
+
+
+    // Дожидаемся загрузки DOM
+    document.addEventListener('DOMContentLoaded', function() {
+
+        // Получаем ссылки на элементы DOM
+        const userSelect = document.getElementById('user-select');
+        const foodSelect = document.getElementById('food-select');
+        const addFoodBtn = document.getElementById('add-food-btn');
+        const orderItemsTbody = document.getElementById('order-items-tbody');
+        const emptyRowPlaceholder = document.getElementById('empty-row-placeholder');
+        const createOrderForm = document.getElementById('create-order-form');
+        const hiddenItemsContainer = document.getElementById('hidden-items-container');
+        const submitOrderBtn = document.getElementById('submit-order-btn');
+
+        // Состояние заказа (какие блюда добавлены и их количество)
+        // Инициализируем из данных, полученных из модели
+        // Ключ - foodId, значение - { name: 'Food Name', count: 1 }
+        let currentOrderItems = initialOrderItems || {};
+
+        // ----- Функция обновления таблицы и скрытых полей -----
+        function updateOrderTableAndSubmitButton() {
+            orderItemsTbody.innerHTML = ''; // Очищаем видимую таблицу
+            hiddenItemsContainer.innerHTML = ''; // Очищаем контейнер со скрытыми полями
+            let itemIndex = 0; // Индекс для имен полей массива createOrderItems[...]
+            let hasItems = false; // Флаг, есть ли хотя бы одна позиция
+
+            // Перебираем все позиции в текущем состоянии заказа
+            for (const foodId in currentOrderItems) {
+                if (currentOrderItems.hasOwnProperty(foodId)) {
+                    hasItems = true; // Нашли хотя бы одну позицию
+                    const item = currentOrderItems[foodId];
+
+                    // Создаем строку для видимой таблицы
+                    const row = document.createElement('tr');
+                    row.setAttribute('data-food-id', foodId); // Сохраняем ID еды в data-атрибуте
+
+                    // Ячейка с названием
+                    const nameCell = document.createElement('td');
+                    nameCell.textContent = item.name;
+
+                    // Ячейка с количеством и кнопками +/-
+                    const quantityCell = document.createElement('td');
+                    quantityCell.style.textAlign = 'center';
+
+                    const decreaseBtn = document.createElement('button');
+                    decreaseBtn.type = 'button';
+                    decreaseBtn.textContent = '-';
+                    decreaseBtn.classList.add('btn', 'btn-sm', 'btn-warning', 'quantity-change');
+                    decreaseBtn.setAttribute('data-action', 'decrease');
+                    decreaseBtn.disabled = item.count <= 1; // Делаем неактивной, если количество 1
+
+                    const quantitySpan = document.createElement('span');
+                    quantitySpan.textContent = item.count;
+                    quantitySpan.style.margin = '0 10px';
+                    quantitySpan.style.display = 'inline-block';
+                    quantitySpan.style.minWidth = '20px'; // Для выравнивания
+
+                    const increaseBtn = document.createElement('button');
+                    increaseBtn.type = 'button';
+                    increaseBtn.textContent = '+';
+                    increaseBtn.classList.add('btn', 'btn-sm', 'btn-success', 'quantity-change');
+                    increaseBtn.setAttribute('data-action', 'increase');
+
+                    quantityCell.appendChild(decreaseBtn);
+                    quantityCell.appendChild(quantitySpan);
+                    quantityCell.appendChild(increaseBtn);
+
+                    // Ячейка с кнопкой "Удалить"
+                    const actionCell = document.createElement('td');
+                    actionCell.style.textAlign = 'center';
+                    const removeBtn = document.createElement('button');
+                    removeBtn.type = 'button';
+                    removeBtn.textContent = 'Удалить';
+                    removeBtn.classList.add('btn', 'btn-sm', 'btn-danger', 'remove-item');
+                    actionCell.appendChild(removeBtn);
+
+                    // Добавляем ячейки в строку
+                    row.appendChild(nameCell);
+                    row.appendChild(quantityCell);
+                    row.appendChild(actionCell);
+                    // Добавляем строку в тело таблицы
+                    orderItemsTbody.appendChild(row);
+
+                    // Создаем СКРЫТЫЕ поля для отправки данных этой позиции
+                    // 1. Скрытое поле для foodId
+                    const foodIdInput = document.createElement('input');
+                    foodIdInput.type = 'hidden';
+                    // Имя поля должно соответствовать DTO: createOrderItems[индекс].foodId
+                    foodIdInput.name = `createOrderItems[${itemIndex}].foodId`;
+                    foodIdInput.value = foodId;
+                    hiddenItemsContainer.appendChild(foodIdInput);
+
+                    // 2. Скрытое поле для count
+                    const countInput = document.createElement('input');
+                    countInput.type = 'hidden';
+                    // Имя поля должно соответствовать DTO: createOrderItems[индекс].count
+                    countInput.name = `createOrderItems[${itemIndex}].count`;
+                    countInput.value = item.count;
+                    hiddenItemsContainer.appendChild(countInput);
+
+                    itemIndex++; // Увеличиваем индекс для следующей позиции
+                }
+            }
+
+            // Если не добавлено ни одной позиции, показываем заглушку
+            if (!hasItems) {
+                if (emptyRowPlaceholder) {
+                    orderItemsTbody.appendChild(emptyRowPlaceholder);
+                } else { // На всякий случай, если заглушка была удалена
+                    const placeholder = document.createElement('tr');
+                    placeholder.id = 'empty-row-placeholder';
+                    placeholder.innerHTML = '<td colspan="3" style="text-align: center; color: #888;">Заказ пуст. Добавьте блюда выше.</td>';
+                    orderItemsTbody.appendChild(placeholder);
+                }
+            }
+
+            // Включаем/выключаем кнопку отправки формы
+            // Кнопка активна, только если выбран пользователь И есть хотя бы одна позиция
+            submitOrderBtn.disabled = !hasItems || userSelect.value === "";
+        }
+
+        // ----- Обработчик нажатия на кнопку "Добавить в заказ" -----
+        addFoodBtn.addEventListener('click', function() {
+            const selectedOption = foodSelect.options[foodSelect.selectedIndex];
+            const foodId = selectedOption.value; // ID выбранного блюда
+            const foodName = selectedOption.getAttribute('data-food-name'); // Имя из data-атрибута
+
+            // Проверка, выбрано ли блюдо
+            if (!foodId) {
+                alert('Пожалуйста, выберите блюдо.');
+                return;
+            }
+
+            // Проверка, нет ли уже такого блюда в заказе
+            if (currentOrderItems[foodId]) {
+                alert('Это блюдо уже добавлено в заказ. Вы можете изменить количество в таблице.');
+                return;
+            }
+
+            // Добавляем блюдо в состояние заказа с количеством 1
+            currentOrderItems[foodId] = { name: foodName, count: 1 };
+
+            // Обновляем таблицу и скрытые поля
+            updateOrderTableAndSubmitButton();
+
+            // Сбрасываем выбор в выпадающем списке еды (опционально)
+            foodSelect.selectedIndex = 0;
+        });
+
+        // ----- Обработчик кликов внутри таблицы позиций (делегирование) -----
+        orderItemsTbody.addEventListener('click', function(event) {
+            const target = event.target; // Элемент, по которому кликнули
+            const row = target.closest('tr'); // Находим ближайшую строку таблицы
+
+            // Игнорируем клики не по кнопкам внутри строк с data-food-id
+            if (!row || !row.hasAttribute('data-food-id')) return;
+
+            const foodId = row.getAttribute('data-food-id'); // Получаем ID еды из строки
+
+            // Если кликнули по кнопке изменения количества (+ или -)
+            if (target.classList.contains('quantity-change')) {
+                const action = target.getAttribute('data-action'); // Определяем действие ('increase' или 'decrease')
+                if (action === 'increase') {
+                    currentOrderItems[foodId].count++; // Увеличиваем количество
+                } else if (action === 'decrease') {
+                    // Уменьшаем, но не ниже 1
+                    if (currentOrderItems[foodId].count > 1) {
+                        currentOrderItems[foodId].count--;
+                    }
+                }
+                // Обновляем таблицу и скрытые поля после изменения количества
+                updateOrderTableAndSubmitButton();
+            }
+            // Если кликнули по кнопке "Удалить"
+            else if (target.classList.contains('remove-item')) {
+                // Спрашиваем подтверждение
+                if (confirm(`Удалить "${currentOrderItems[foodId].name}" из заказа?`)) {
+                    delete currentOrderItems[foodId]; // Удаляем элемент из объекта состояния
+                    // Обновляем таблицу и скрытые поля
+                    updateOrderTableAndSubmitButton();
+                }
+            }
+        });
+
+        // ----- Обработчик изменения выбора пользователя -----
+        userSelect.addEventListener('change', function() {
+            // Просто обновляем состояние кнопки "Создать/Обновить Заказ"
+            updateOrderTableAndSubmitButton();
+        });
+
+        // ----- Инициализация при загрузке страницы -----
+        // 1. Устанавливаем выбранного пользователя в выпадающем списке (если режим редактирования)
+        //    (Thymeleaf с th:selected уже должен был это сделать, но для надежности)
+        if (isEditMode && initialUserId) {
+            userSelect.value = initialUserId;
+        }
+
+        // 2. Выполняем первичную отрисовку таблицы на основе начального состояния
+        //    (либо пустого, либо предзаполненного из initialOrderItems)
+        //    Это также установит правильное начальное состояние кнопки отправки.
+        updateOrderTableAndSubmitButton();
+
+    }); // Конец DOMContentLoaded
+
+    /*]]>*/
+</script>
+
+</body>
+</html>

@@ -1,6 +1,7 @@
 package by.bsuir.foodordering.core.service;
 
 import by.bsuir.foodordering.api.dto.create.CreateOrderDto;
+import by.bsuir.foodordering.api.dto.create.UpdateOrderDto;
 import by.bsuir.foodordering.api.dto.get.OrderDto;
 import by.bsuir.foodordering.api.dto.get.OrderInfoDto;
 import java.util.List;
@@ -15,9 +16,9 @@ public interface OrderService {
 
     List<OrderDto> findByUserId(Long userId);
 
-    OrderDto update(OrderDto orderDto);
+    void updateOrder(UpdateOrderDto dto);
 
-    OrderDto findById(Long id);
+    OrderInfoDto findById(Long id);
 
     OrderDto create(CreateOrderDto createOrderDto);
 

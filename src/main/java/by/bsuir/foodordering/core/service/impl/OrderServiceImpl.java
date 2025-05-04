@@ -2,6 +2,7 @@ package by.bsuir.foodordering.core.service.impl;
 
 import by.bsuir.foodordering.api.dto.create.CreateOrderDto;
 import by.bsuir.foodordering.api.dto.create.CreateOrderItemDto;
+import by.bsuir.foodordering.api.dto.create.UpdateOrderDto;
 import by.bsuir.foodordering.api.dto.get.OrderDto;
 import by.bsuir.foodordering.api.dto.get.OrderInfoDto;
 import by.bsuir.foodordering.core.annotation.Timed;
@@ -13,8 +14,10 @@ import by.bsuir.foodordering.core.mapper.create.CreateOrderItemMapper;
 import by.bsuir.foodordering.core.mapper.get.OrderInfoMapper;
 import by.bsuir.foodordering.core.mapper.get.OrderItemMapper;
 import by.bsuir.foodordering.core.mapper.get.OrderMapper;
+import by.bsuir.foodordering.core.models.Food;
 import by.bsuir.foodordering.core.models.Order;
 import by.bsuir.foodordering.core.models.OrderItem;
+import by.bsuir.foodordering.core.models.User;
 import by.bsuir.foodordering.core.repository.FoodRepository;
 import by.bsuir.foodordering.core.repository.OrderItemRepository;
 import by.bsuir.foodordering.core.repository.OrderRepository;
@@ -83,40 +86,48 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    @Transactional
-    public OrderDto update(OrderDto orderDto) {
-        if (orderDto == null) {
-            throw new IllegalArgumentException();
-        } else if (orderDto.isOrdered()) {
-            throw new MakeOrderException("The order has already been placed");
-        }
-        Order order = orderRepository.findById(orderDto.getId())
-                .orElseThrow(
-                        () -> new EntityNotFoundException(
-                                ORDER_EX + orderDto.getId()
-                        )
-                );
-        if (!order.getUser().getId().equals(orderDto.getUserId())) {
-            order.setUser(userRepository.findById(orderDto.getUserId())
-                                    .orElseThrow(
-                                            () -> new EntityNotFoundException(
-                                                            "User not found with id: "
-                                                                    + orderDto.getUserId()
-                                            )
-                                    )
-            );
-        }
-        if (!orderDto.getOrderItemIds().isEmpty()) {
-            order.setOrderItems(toOrderItemMap(orderDto.getOrderItemIds()));
-        }
-        BigDecimal totalPrice = BigDecimal.ZERO;
+    @Transactional // Очень важно для консистентности
+    public void updateOrder(UpdateOrderDto dto) {
 
-        for (OrderItem orderItem : order.getOrderItems()) {
-            totalPrice = totalPrice.add(orderItem.getTotalPrice());
-        }
-        order.setTotalPrice(totalPrice);
+        Order order = orderRepository.findById(dto.getOrderId())
+                .orElseThrow(() -> new EntityNotFoundException("Order not found with id: " + dto.getOrderId()));
 
-        return orderMapper.toDto(order);
+        if (order.isOrdered()) {
+            throw new IllegalStateException("Cannot update an already placed order (ID: " + dto.getOrderId() + ")");
+        }
+
+        if (!order.getUser().getId().equals(dto.getUserId())) {
+            User user = userRepository.findById(dto.getUserId())
+                    .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + dto.getUserId()));
+            order.setUser(user);
+        }
+
+        List<OrderItem> existingItems = orderItemRepository.findOrderItemByOrderId(order.getId());
+        if (!existingItems.isEmpty()) {
+            orderItemRepository.deleteAll(existingItems);
+            order.getOrderItems().clear(); // Очищаем коллекцию в заказе
+        }
+
+        BigDecimal newTotalPrice = BigDecimal.ZERO;
+        if (dto.getCreateOrderItems() != null && !dto.getCreateOrderItems().isEmpty()) {
+            for (CreateOrderItemDto itemDto : dto.getCreateOrderItems()) {
+                Food food = foodRepository.findById(itemDto.getFoodId())
+                        .orElseThrow(() -> new EntityNotFoundException("Food not found with id: " + itemDto.getFoodId()));
+
+                OrderItem newItem = new OrderItem();
+                newItem.setOrder(order); // Связь с заказом
+                newItem.setFood(food);
+                newItem.setCount(itemDto.getCount());
+                newItem.setTotalPrice(food.getPrice().multiply(BigDecimal.valueOf(itemDto.getCount()))); // Рассчитываем цену позиции
+
+                order.getOrderItems().add(newItem); // Добавляем в коллекцию заказа
+                newTotalPrice = newTotalPrice.add(newItem.getTotalPrice()); // Суммируем общую цену
+            }
+        }
+
+        order.setTotalPrice(newTotalPrice);
+
+        orderRepository.save(order);
     }
 
     @Transactional
@@ -232,7 +243,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public OrderDto findById(Long id) {
+    public OrderInfoDto findById(Long id) {
         Order order = orderRepository
                 .findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(ORDER_EX + id));
@@ -247,6 +258,7 @@ public class OrderServiceImpl implements OrderService {
         }
 
         order.setTotalPrice(totalPrice);
-        return orderMapper.toDto(order);
+
+        return orderInfoMapper.toDto(order, orderItemMapper);
     }
 }

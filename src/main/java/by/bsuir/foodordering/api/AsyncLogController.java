@@ -1,5 +1,8 @@
 package by.bsuir.foodordering.api;
 
+import by.bsuir.foodordering.core.exception.LogFileAccessException;
+import by.bsuir.foodordering.core.exception.LogFileNotReadyException;
+import by.bsuir.foodordering.core.exception.TaskNotFoundException;
 import by.bsuir.foodordering.core.service.impl.AsyncLogService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -22,14 +25,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @AllArgsConstructor
 @RequestMapping("/api/log-tasks")
 @Tag(name = "Async Application Log Task Management",
         description = "Endpoints for asynchronously filtering application logs by date.")
-public class AsyncLogController { // Переименовали для ясности
+public class AsyncLogController {
 
     private static final Logger logger = LoggerFactory.getLogger(AsyncLogController.class);
     private final AsyncLogService asyncLogService;
@@ -88,94 +90,57 @@ public class AsyncLogController { // Переименовали для ясно�
         @ApiResponse(responseCode = "404",
                 description = "Task not found for the given ID", content = @Content)
     })
+
     @GetMapping("/{taskId}/status")
     public ResponseEntity<AsyncLogService.LogTaskStatus> getLogStatus(
-            @Parameter(description = "ID of the task to check",
-                    required = true, example = "f47ac10b-58cc-4372-a567-0e02b2c3d479")
             @PathVariable String taskId) {
         logger.debug("Request received for status of task ID: {}", taskId);
         AsyncLogService.LogTaskStatus status = asyncLogService.getTaskStatus(taskId);
         if (status == null) {
             logger.warn("Status requested for non-existent task ID: {}", taskId);
-            throw new ResponseStatusException(
-                    HttpStatus.NOT_FOUND,
-                    "Task not found with ID: " + taskId);
+            throw new TaskNotFoundException(taskId);
         }
         logger.debug("Returning status for task ID {}: {}", taskId, status.getStatus());
         return ResponseEntity.ok(status);
     }
 
-    @Operation(
-            summary = "Download the filtered application log file",
-            description = "Downloads the log file generated "
-                    + "by a completed asynchronous filtering task."
-    )
-    @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Log file download started",
-                content = @Content(mediaType = MediaType.TEXT_PLAIN_VALUE,
-                        schema = @Schema(type = "string", format = "binary"))),
-        @ApiResponse(responseCode = "404",
-                description = "Task not found or associated file not found", content = @Content),
-        @ApiResponse(responseCode = "409",
-                description = "Log file is not ready yet (task not completed or failed)",
-                content = @Content),
-        @ApiResponse(responseCode = "500",
-                description = "Error accessing the log file", content = @Content)
-    })
-    @GetMapping(value = "/{taskId}/download", produces = MediaType.TEXT_PLAIN_VALUE)
-    public ResponseEntity<Resource> downloadLogFile(
-            @Parameter(description = "ID of the task whose log file to download",
-                    required = true, example = "f47ac10b-58cc-4372-a567-0e02b2c3d479")
-            @PathVariable String taskId) {
+    @GetMapping(value = "/{taskId}/download")
+    public ResponseEntity<Resource> downloadLogFile(@PathVariable String taskId) {
         logger.info("Request received to download log file for task ID: {}", taskId);
         AsyncLogService.LogTaskStatus status = asyncLogService.getTaskStatus(taskId);
         if (status == null) {
             logger.warn("Download requested for non-existent task ID: {}", taskId);
-            throw new ResponseStatusException(
-                    HttpStatus.NOT_FOUND,
-                    "Task not found with ID: " + taskId);
+            throw new TaskNotFoundException(taskId);
         }
 
         if (status.getStatus() != AsyncLogService.Status.COMPLETED) {
             logger.warn("Download requested for task ID {} but status is: {}",
                     taskId, status.getStatus());
-            throw new ResponseStatusException(HttpStatus.CONFLICT,
-                    "Log file is not ready yet. Status: " + status.getStatus());
+            throw new LogFileNotReadyException(status.getStatus().name());
         }
 
-        Path filePath = null;
         try {
-            filePath = Paths.get(status.getMessage());
+            Path filePath = Paths.get(status.getMessage());
             logger.debug("Attempting to download file from path: {}", filePath);
             Resource resource = new FileSystemResource(filePath);
 
             if (!resource.exists() || !resource.isReadable()) {
                 logger.error("Filtered log file not found or cannot be read at path: {}", filePath);
-                throw new ResponseStatusException(HttpStatus.NOT_FOUND,
-                        "Filtered log file not found or cannot be read for task ID: " + taskId);
+                throw new LogFileAccessException("Filtered log file not found or cannot be read for task ID: " + taskId);
             }
 
             HttpHeaders headers = new HttpHeaders();
-            headers.add(HttpHeaders.CONTENT_DISPOSITION,
-                    "attachment; filename=\"" + resource.getFilename() + "\"");
+            headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"");
 
-            logger.info("Sending filtered log file {} for task ID {}",
-                    resource.getFilename(), taskId);
+            logger.info("Sending filtered log file {} for task ID {}", resource.getFilename(), taskId);
             return ResponseEntity.ok()
                     .headers(headers)
                     .contentLength(resource.contentLength())
                     .body(resource);
 
         } catch (IOException e) {
-            logger.error("IO Error accessing filtered log file for task ID {} at path {}: {}",
-                    taskId, filePath, e.getMessage());
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
-                    "Error accessing filtered log file.", e);
-        } catch (Exception e) {
-            logger.error("Unexpected error during download for task ID {}: {}",
-                    taskId, e.getMessage());
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
-                    "Unexpected error preparing download.", e);
+            logger.error("IO Error accessing filtered log file for task ID {}: {}", taskId, e.getMessage());
+            throw new LogFileAccessException("Error accessing filtered log file.", e);
         }
     }
 }

@@ -1,6 +1,7 @@
 package by.bsuir.foodordering.api;
 
 import by.bsuir.foodordering.api.dto.create.CreateOrderDto;
+import by.bsuir.foodordering.api.dto.create.UpdateOrderDto;
 import by.bsuir.foodordering.api.dto.get.OrderDto;
 import by.bsuir.foodordering.api.dto.get.OrderInfoDto;
 import by.bsuir.foodordering.core.annotation.Timed;
@@ -62,7 +63,7 @@ public class OrderController {
                         schema = @Schema(implementation = Map.class)))
     })
     @GetMapping("/{id}")
-    public OrderDto findById(
+    public OrderInfoDto findById(
             @Parameter(description = "The unique ID of the order", required = true, example = "1",
                     schema = @Schema(type = "integer", format = "int64"))
             @PathVariable Long id) {
@@ -147,12 +148,12 @@ public class OrderController {
                         schema = @Schema(implementation = Map.class)))
     })
     @PutMapping("/update")
-    public OrderDto updateOrder(
+    public void updateOrder(
             @RequestBody(description = "Updated data for the order (must include the order ID)",
                     required = true,
                     content = @Content(schema = @Schema(implementation = OrderDto.class)))
-            @org.springframework.web.bind.annotation.RequestBody OrderDto orderDto) {
-        return orderServiceImpl.update(orderDto);
+            @org.springframework.web.bind.annotation.RequestBody UpdateOrderDto orderDto) {
+        orderServiceImpl.updateOrder(orderDto);
     }
 
     @Operation(summary = "Find orders by exact food item count",

@@ -4,13 +4,16 @@ import java.util.HashMap;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 @ControllerAdvice
 public class MyExceptionHandler {
@@ -108,5 +111,43 @@ public class MyExceptionHandler {
         errors.put(MSG,  ex.getMessage());
         logger.warn("Argument error in field '{}': {}", ex.getClass().getName(), ex.getMessage());
         return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
+    }
+
+
+    @ExceptionHandler(TaskNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    @ResponseBody
+    public ResponseEntity<Map<String, String>> handleTaskNotFound(TaskNotFoundException ex) {
+        Map<String, String> errors = new HashMap<>();
+        errors.put(EXC, "TASK_NOT_FOUND");
+        errors.put(MSG, ex.getMessage());
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        return new ResponseEntity<>(errors, headers, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(LogFileNotReadyException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    @ResponseBody
+    public ResponseEntity<Map<String, String>> handleLogNotReady(LogFileNotReadyException ex) {
+        Map<String, String> errorDetails = new HashMap<>();
+        errorDetails.put(EXC, "LOG_FILE_NOT_READY");
+        errorDetails.put(MSG, ex.getMessage());
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        return new ResponseEntity<>(errorDetails, headers, HttpStatus.CONFLICT);
+    }
+
+
+    @ExceptionHandler(LogFileAccessException.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    @ResponseBody
+    public ResponseEntity<Map<String, String>> handleFileAccess(LogFileAccessException ex) {
+        Map<String, String> errorDetails = new HashMap<>();
+        errorDetails.put(EXC, "LOG_FILE_ACCESS_ERROR");
+        errorDetails.put(MSG, "An internal error occurred while accessing the log file.");
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        return new ResponseEntity<>(errorDetails, headers, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }

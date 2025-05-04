@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{_layout :: head(${pageTitle})}"></head>
+<body>
+<header th:replace="~{_layout :: header}"></header>
+<main class="container">
+    <h1 th:text="${pageTitle}"></h1>
+    <!-- Сообщения -->
+    <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
+    <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
+    <!-- Форма -->
+    <!-- !!! th:object привязан к "orderFormData", th:action берется из модели !!! -->
+    <form th:object="${orderFormData}" th:action="${formAction}" method="post" id="order-form">
+
+        <!-- Ошибки валидации -->
+        <div th:if="${#fields.hasGlobalErrors()}" class="alert alert-danger">
+            <p th:each="err : ${#fields.globalErrors()}" th:text="${err}"></p>
+        </div>
+        <div th:if="${#fields.hasErrors('items.empty')}" class="alert alert-danger" th:text="${#fields.errors('items.empty')[0]}"></div>
+        <!-- Вывод ошибок для конкретных полей позиций (если они есть) -->
+        <div th:if="${#fields.hasErrors('createOrderItems*') or #fields.hasErrors('orderItemDtos*')}" class="alert alert-danger">
+            <p>Ошибки в позициях заказа:</p>
+            <ul>
+                <li th:each="err : ${#fields.errors('createOrderItems*')}" th:text="${err}"></li>
+                <li th:each="err : ${#fields.errors('orderItemDtos*')}" th:text="${err}"></li>
+            </ul>
+        </div>
+
+
+        <!-- Скрытое поле ID (только для редактирования) -->
+        <!-- Используем th:if для проверки наличия поля id в объекте -->
+        <input type="hidden" th:if="${orderFormData.id != null}" th:field="*{id}" />
+
+        <!-- Выбор пользователя -->
+        <div class="form-group">
+            <label for="userId">Пользователь:</label>
+            <!-- !!! th:field привязан к *{userId} - он есть в обоих DTO !!! -->
+            <select id="userId" th:field="*{userId}" required class="form-control"
+                    th:classappend="${#fields.hasErrors('userId')} ? 'is-invalid' : ''">
+                <option value="">-- Выберите пользователя --</option>
+                <option th:each="user : ${allUsers}" th:value="${user.id}" th:text="${user.username} + ' (ID: ' + ${user.id} + ')'"></option>
+            </select>
+            <div th:if="${#fields.hasErrors('userId')}" class="invalid-feedback" th:errors="*{userId}"></div>
+        </div>
+        <hr>
+        <h3>Позиции заказа</h3>
+        <div id="order-items-container">
+            <!-- Сюда JS добавит строки -->
+        </div>
+        <button type="button" id="add-item-btn" class="btn btn-success" style="margin-top: 10px;">+ Добавить позицию</button>
+        <hr>
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Сохранить</button>
+            <a th:href="@{/ui/orders}" class="btn">Отмена</a>
+        </div>
+    </form>
+
+    <!-- Шаблон строки заказа -->
+    <template id="order-item-template">
+        <div class="order-item-row" style="display: flex; align-items: center; margin-bottom: 10px; padding: 10px; border: 1px solid #eee; border-radius: 5px;">
+            <div class="form-group" style="flex-grow: 1; margin-right: 10px; margin-bottom: 0;">
+                <label style="font-size: 0.9em;">Еда:</label>
+                <!-- !!! Имя поля зависит от режима (isEditMode) - устанавливается JS !!! -->
+                <select name="" required class="form-control food-select">
+                    <option value="">-- Выберите еду --</option>
+                </select>
+            </div>
+            <div class="form-group" style="width: 100px; margin-right: 10px; margin-bottom: 0;">
+                <label style="font-size: 0.9em;">Кол-во:</label>
+                <!-- !!! Имя поля зависит от режима (isEditMode) - устанавливается JS !!! -->
+                <input type="number" name="" value="1" min="1" required class="form-control count-input"/>
+            </div>
+            <button type="button" class="btn btn-danger btn-sm remove-item-btn" title="Удалить позицию">X</button>
+        </div>
+    </template>
+</main>
+
+<!-- JavaScript -->
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    const isEditMode = [[${isEditMode}]];
+    const allFood = JSON.parse([[${allFoodJson}]]);
+    const existingOrderItems = JSON.parse([[${existingOrderItemsJson}]]);
+
+    const itemsContainer = document.getElementById('order-items-container');
+    const template = document.getElementById('order-item-template');
+    const addItemBtn = document.getElementById('add-item-btn');
+
+    // --- Определяем префикс имени для полей позиций ---
+    // Если редактируем, используем "orderItemDtos", если создаем - "createOrderItems"
+    const itemFieldNamePrefix = isEditMode ? 'orderItemDtos' : 'createOrderItems';
+
+    function addOrderItemRow(itemData = null) {
+        const index = itemsContainer.children.length;
+        const clone = template.content.firstElementChild.cloneNode(true);
+        const foodSelect = clone.querySelector('.food-select');
+        const countInput = clone.querySelector('.count-input');
+        const removeBtn = clone.querySelector('.remove-item-btn');
+
+        // !!! Устанавливаем имена полей с правильным префиксом и индексом !!!
+        foodSelect.name = `${itemFieldNamePrefix}[${index}].foodId`;
+        countInput.name = `${itemFieldNamePrefix}[${index}].count`;
+
+        // Заполняем select едой
+        allFood.forEach(food => {
+            const option = document.createElement('option');
+            option.value = food.id;
+            option.textContent = food.name;
+            foodSelect.appendChild(option);
+        });
+
+        // Если есть данные для предзаполнения (редактирование или ошибка валидации)
+        if (itemData) {
+            // !!! В existingOrderItemsJson теперь всегда есть foodId (т.к. мы его добавили в OrderItemDto ИЛИ это CreateOrderItemDto при ошибке)
+            foodSelect.value = itemData.foodId || ""; // Устанавливаем foodId или пустую строку, если его нет
+            countInput.value = itemData.count || 1;   // Устанавливаем count или 1 по умолчанию
+        }
+
+        removeBtn.addEventListener('click', () => {
+            clone.remove();
+            reindexOrderItems();
+        });
+        itemsContainer.appendChild(clone);
+    }
+
+    function reindexOrderItems() {
+        const rows = itemsContainer.querySelectorAll('.order-item-row');
+        rows.forEach((row, index) => {
+            row.querySelectorAll('select, input').forEach(input => {
+                if (input.name && input.name.includes('[')) { // Проверяем, содержит ли имя скобки индекса
+                    // Заменяем старый префикс и индекс на новый
+                    input.name = input.name.replace(/^(orderItemDtos|createOrderItems)\[\d+\]/, `${itemFieldNamePrefix}[${index}]`);
+                }
+            });
+        });
+    }
+
+    // Инициализация: Заполняем существующими items или добавляем одну пустую строку
+    if (existingOrderItems && existingOrderItems.length > 0) {
+        existingOrderItems.forEach(item => addOrderItemRow(item));
+    } else {
+        addOrderItemRow(); // Добавляем одну пустую строку для новой формы
+    }
+
+    addItemBtn.addEventListener('click', () => addOrderItemRow());
+    /*]]>*/
+</script>
+</body>
+</html>

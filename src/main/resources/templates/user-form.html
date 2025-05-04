@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<!-- Ожидаемые переменные: pageTitle, isEditMode, formAction, userDto, allUserTypes, errorMessage -->
+<head th:replace="~{_layout :: head(${pageTitle ?: 'Управление Пользователем'})}"></head>
+<body th:with="isEditMode=${isEditMode ?: false}"> <!-- Удобный доступ к флагу -->
+
+<header th:replace="~{_layout :: header}"></header>
+
+<main class="container">
+    <h1 th:text="${pageTitle}">Добавить/Редактировать Пользователя</h1>
+
+    <!-- Отображение общих ошибок -->
+    <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
+
+    <!-- Форма пользователя -->
+    <!-- Используем th:object для привязки к userDto и отображения ошибок валидации -->
+    <form th:action="@{${formAction}}" method="post" th:object="${userDto}">
+
+        <!-- Отображение ошибок валидации Spring -->
+        <div th:if="${#fields.hasErrors('*')}" class="alert alert-danger">
+            <p>Пожалуйста, исправьте следующие ошибки:</p>
+            <ul>
+                <li th:each="err : ${#fields.errors('*')}" th:text="${err}"></li>
+            </ul>
+        </div>
+
+        <!-- Скрытое поле для ID (только при редактировании) -->
+        <input type="hidden" th:if="${isEditMode}" th:field="*{id}" />
+
+        <!-- Поле Имя -->
+        <div class="form-group">
+            <label for="name">Имя:</label>
+            <input type="text" id="name" th:field="*{name}" required class="form-control"
+                   th:errorclass="is-invalid" /> <!-- Добавляем класс при ошибке -->
+            <!-- Сообщение об ошибке для конкретного поля -->
+            <span th:if="${#fields.hasErrors('name')}" th:errors="*{name}" class="text-danger"></span>
+        </div>
+
+        <!-- Поле Email -->
+        <div class="form-group">
+            <label for="email">Email:</label>
+            <input type="email" id="email" th:field="*{email}" required class="form-control"
+                   th:errorclass="is-invalid" />
+            <span th:if="${#fields.hasErrors('email')}" th:errors="*{email}" class="text-danger"></span>
+        </div>
+
+        <!-- Поле Тип пользователя (выпадающий список) -->
+        <div class="form-group">
+            <label for="userTypeStr">Тип пользователя:</label>
+            <select id="userTypeStr" th:field="*{userTypeStr}" required class="form-control"
+                    th:errorclass="is-invalid">
+                <option value="">-- Выберите тип --</option>
+                <!-- Итерация по списку типов (enum или строки) -->
+                <th:block th:each="type : ${allUserTypes}">
+                    <!-- Если это enum UserType -->
+                    <option th:value="${type.name()}" th:text="${type.getDisplayName()}">Тип</option>
+                    <!-- Если это список строк: -->
+                    <!-- <option th:value="${type}" th:text="${type}">Тип</option> -->
+                </th:block>
+            </select>
+            <span th:if="${#fields.hasErrors('userTypeStr')}" th:errors="*{userTypeStr}" class="text-danger"></span>
+        </div>
+
+        <!-- Кнопки Сохранить/Обновить и Отмена -->
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary"
+                    th:text="${isEditMode} ? 'Обновить Пользователя' : 'Создать Пользователя'">
+                Сохранить
+            </button>
+            <a th:href="@{/ui/users}" class="btn">Отмена</a>
+        </div>
+    </form>
+</main>
+
+</body>
+</html>

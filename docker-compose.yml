@@ -1,4 +1,17 @@
 services:
+  app:
+    build: .
+    container_name: bsuir-lavka-app
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/food_ordering
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+    depends_on:
+      - postgres # Гарантирует, что сервис 'postgres' запустится ПЕРЕД сервисом 'app'
+
   postgres:
     image: postgres:16
     container_name: food_ordering_db
@@ -6,9 +19,9 @@ services:
     ports:
       - "5432:5432"
     environment:
-      POSTGRES_DB: food_ordering
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: food_ordering # Имя базы данных
+      POSTGRES_USER: postgres    # Имя пользователя БД
+      POSTGRES_PASSWORD: postgres  # Пароль пользователя БД
     volumes:
       - postgres_data:/var/lib/postgresql/data
 

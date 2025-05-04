@@ -1,0 +1,202 @@
+/* src/main/resources/static/css/style.css */
+
+body {
+    font-family: sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f0f8ff; /* Светло-голубой фон */
+    color: #333;
+}
+
+.container {
+    max-width: 1000px;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: #fff; /* Белый фон для контента */
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+}
+
+/* --- Шапка --- */
+header {
+    background-color: #0056b3; /* Синий цвет шапки */
+    color: white;
+    padding: 15px 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 3px solid #003d80; /* Темно-синяя граница */
+}
+
+header .logo {
+    font-size: 1.5em;
+    font-weight: bold;
+}
+
+header nav ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+}
+
+header nav ul li {
+    margin-left: 20px;
+}
+
+header nav ul li a {
+    color: white;
+    text-decoration: none;
+    font-size: 1.1em;
+    padding: 5px 10px;
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
+}
+
+header nav ul li a:hover,
+header nav ul li a.active { /* Стиль для активной ссылки (можно добавить класс в Thymeleaf) */
+    background-color: #003d80; /* Темно-синий при наведении */
+}
+
+/* --- Таблицы --- */
+table {
+    width: 100%;
+    border-collapse: collapse; /* Убираем двойные линии */
+    margin-top: 20px;
+}
+
+thead {
+    background-color: #e6f0ff; /* Светло-синий фон заголовков таблицы */
+}
+
+th, td {
+    border: 1px solid #add8e6; /* Голубые границы ячеек */
+    padding: 10px 12px;
+    text-align: left;
+    vertical-align: middle;
+}
+
+th {
+    color: #0056b3; /* Синий текст заголовков */
+    font-weight: bold;
+}
+
+tbody tr:nth-child(even) {
+    background-color: #f8fafd; /* Чередование цветов строк */
+}
+
+tbody tr:hover {
+    background-color: #d6eaff; /* Подсветка строки при наведении */
+}
+
+/* --- Кнопки и ссылки --- */
+.btn {
+    display: inline-block;
+    padding: 8px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    text-decoration: none;
+    font-size: 0.9em;
+    margin-right: 5px;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    vertical-align: middle; /* Выравнивание кнопок в ячейках */
+}
+
+.btn-primary {
+    background-color: #007bff; /* Основной синий для кнопок */
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #0056b3;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.btn-edit {
+    background-color: #ffc107; /* Желтый для редактирования */
+    color: #333;
+}
+
+.btn-edit:hover {
+    background-color: #e0a800;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.btn-delete {
+    background-color: #dc3545; /* Красный для удаления */
+    color: white;
+}
+
+.btn-delete:hover {
+    background-color: #c82333;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+/* Кнопка удаления внутри формы */
+td form {
+    display: inline; /* Чтобы форма не занимала всю строку */
+    margin: 0;
+    padding: 0;
+}
+
+td form button {
+    padding: 8px 15px; /* Выравниваем размер с ссылками */
+    font-size: 0.9em;
+    vertical-align: middle;
+}
+
+
+/* --- Формы --- */
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    color: #0056b3;
+    font-weight: bold;
+}
+
+.form-group input[type="text"],
+.form-group input[type="number"],
+.form-group select { /* Если будут списки */
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #add8e6; /* Голубая рамка */
+    border-radius: 4px;
+    box-sizing: border-box; /* Учитываем padding и border в ширине */
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    border-color: #0056b3;
+    outline: none;
+    box-shadow: 0 0 5px rgba(0, 86, 179, 0.3);
+}
+
+
+.form-actions {
+    margin-top: 20px;
+}
+
+/* --- Сообщения обратной связи --- */
+.alert {
+    padding: 15px;
+    margin-bottom: 20px;
+    border: 1px solid transparent;
+    border-radius: 4px;
+}
+
+.alert-success {
+    color: #155724;
+    background-color: #d4edda;
+    border-color: #c3e6cb;
+}
+
+.alert-danger {
+    color: #721c24;
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
+}
