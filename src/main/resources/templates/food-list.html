@@ -27,18 +27,14 @@
         </thead>
         <tbody>
         <tr th:if="${foods.isEmpty()}">
-            <!-- <td colspan="5" ...> --> <!-- Увеличиваем colspan -->
             <td colspan="5" style="text-align: center;">Список еды пуст.</td>
         </tr>
-        <!-- Добавляем переменную статуса 'foodStat' -->
         <tr th:unless="${foods.isEmpty()}" th:each="food, foodStat : ${foods}">
-            <!-- <td th:text="${food.id}">1</td>--> <!-- Убираем ID -->
             <td th:text="${foodStat.count}">1</td> <!-- Используем 1-based индекс -->
             <td th:text="${food.name}">Пицца</td>
             <td th:text="${#numbers.formatDecimal(food.price, 1, 'COMMA', 2, 'POINT')} + ' руб.'">15.50 руб.</td>
             <td th:text="${food.foodTypeStr}">PIZZA</td>
             <td>
-                <!-- Действия остаются -->
                 <a th:href="@{/ui/food/edit/{id}(id=${food.id})}" class="btn btn-edit">Редактировать</a>
                 <form th:action="@{/ui/food/delete/{id}(id=${food.id})}" method="post" style="display: inline;">
                     <button type="submit" class="btn btn-delete"

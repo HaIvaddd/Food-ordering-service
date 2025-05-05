@@ -1,23 +1,18 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
-      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"> <!-- Добавь пространство имен -->
-<!-- Используем динамический заголовок, переданный из контроллера -->
+<html xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{_layout :: head(${pageTitle ?: 'Детали Заказа'})}"></head>
 <body>
 
 <header th:replace="~{_layout :: header}"></header>
 
 <main class="container">
-    <!-- Проверяем, что orderInfo не null -->
     <div th:if="${orderInfo != null}">
         <h1 th:text="'Детали Заказа #' + ${orderInfo.id}">Детали Заказа #ID</h1>
 
-        <!-- Отображение общих ошибок (если передан из редиректа) -->
         <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
 
-        <!-- Основная информация о заказе -->
         <div style="margin-bottom: 20px;">
-            <dl class="dl-horizontal"> <!-- Можно использовать dl для пар ключ-значение -->
+            <dl class="dl-horizontal">
                 <dt>ID Заказа:</dt>
                 <dd th:text="${orderInfo.id}">1</dd>
 
@@ -35,7 +30,6 @@
             </dl>
         </div>
 
-        <!-- Таблица с позициями заказа -->
         <h2>Позиции заказа</h2>
         <table>
             <thead>
@@ -57,13 +51,11 @@
             </tbody>
         </table>
 
-        <!-- Кнопка Назад -->
         <div style="margin-top: 20px;">
             <a th:href="@{/ui/orders}" class="btn">Назад к списку заказов</a>
         </div>
 
     </div>
-    <!-- Сообщение, если orderInfo не был найден (хотя редирект должен был сработать) -->
     <div th:if="${orderInfo == null and errorMessage == null}" class="alert alert-warning">
         Информация о заказе не найдена.
         <a th:href="@{/ui/orders}" class="btn btn-sm">Вернуться к списку</a>

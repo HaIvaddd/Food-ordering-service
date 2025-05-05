@@ -8,9 +8,10 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/food_ordering
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
-      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_HIBERNATE_DDL_AUTO: none
     depends_on:
-      - postgres # Гарантирует, что сервис 'postgres' запустится ПЕРЕД сервисом 'app'
+      postgres:
+        condition: service_healthy
 
   postgres:
     image: postgres:16
@@ -19,11 +20,16 @@ services:
     ports:
       - "5432:5432"
     environment:
-      POSTGRES_DB: food_ordering # Имя базы данных
-      POSTGRES_USER: postgres    # Имя пользователя БД
-      POSTGRES_PASSWORD: postgres  # Пароль пользователя БД
+      POSTGRES_DB: food_ordering
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d food_ordering"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
 volumes:
   postgres_data:

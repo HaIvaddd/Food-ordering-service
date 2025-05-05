@@ -8,16 +8,13 @@
 <main class="container">
     <h1 th:text="${pageTitle}">Список Пользователей</h1>
 
-    <!-- Сообщения обратной связи -->
     <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
     <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
 
-    <!-- Кнопка Добавить Пользователя -->
     <div style="margin-bottom: 15px;">
         <a th:href="@{/ui/users/add}" class="btn btn-primary">Добавить Пользователя</a>
     </div>
 
-    <!-- Таблица пользователей -->
     <table>
         <thead>
         <tr>
@@ -30,18 +27,14 @@
         </thead>
         <tbody>
         <tr th:if="${users == null or users.isEmpty()}">
-            <!-- <td colspan="5" ...> --> <!-- Увеличиваем colspan -->
             <td colspan="5" style="text-align: center;">Пользователи не найдены.</td>
         </tr>
-        <!-- Добавляем переменную статуса 'userStat' -->
         <tr th:unless="${users == null or users.isEmpty()}" th:each="user, userStat : ${users}">
-            <!-- <td th:text="${user.id}">1</td> --> <!-- Убираем ID -->
-            <td th:text="${userStat.count}">1</td> <!-- Используем 1-based индекс -->
+            <td th:text="${userStat.count}">1</td>
             <td th:text="${user.name}">Иван Иванов</td>
             <td th:text="${user.email}">ivan@example.com</td>
             <td th:text="${user.userTypeStr}">CUSTOMER</td>
             <td>
-                <!-- Действия остаются (используют реальный user.id) -->
                 <a th:href="@{/ui/users/edit/{id}(id=${user.id})}" class="btn btn-edit" style="margin-right: 5px;">Редактировать</a>
                 <form th:action="@{/ui/users/delete/{id}(id=${user.id})}" method="post" style="display: inline;">
                     <button type="submit" class="btn btn-delete"
